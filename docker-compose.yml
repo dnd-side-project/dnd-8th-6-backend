@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+    app:
+        container_name: app
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        env_file:
+            - .env # .env 내용을 secrets에 복사해줍니다.
+        expose:
+            - "3000"
+        ports:
+            - 3000:3000
+        volumes:
+            - ./:/app/
+        restart: 'always'
+        command: |
+            sh -c "npm start"
+
+    nginx:
+        image: nginx:latest
+        container_name: nginx
+        build: ./proxy
+        ports:
+            - '80:80'
+        restart: 'always'
+        depends_on:
+            - app
