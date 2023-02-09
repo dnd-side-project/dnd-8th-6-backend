@@ -25,8 +25,8 @@ jobs:
         script: |
           whoami
           mkdir -p /home/ubuntu/srv/ubuntu
-          touch .env
-          echo "${{ secrets.ENV_VARS }}" >> .env
+          touch /home/ubuntu/srv/ubuntu/.env
+          echo "${{ secrets.ENV_VARS }}" >> /home/ubuntu/srv/ubuntu/.env
 
     - name: copy source via ssh key
       uses: burnett01/rsync-deployments@4.1
