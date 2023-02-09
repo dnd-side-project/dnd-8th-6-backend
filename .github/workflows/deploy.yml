@@ -13,7 +13,7 @@ jobs:
 
     - name: create env file
       run: |
-        sudo touch .env
+        touch .env
         echo "${{ secrets.ENV_VARS }}" >> .env
 
     - name: create remote directory
