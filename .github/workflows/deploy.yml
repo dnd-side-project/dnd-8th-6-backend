@@ -10,6 +10,14 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@main
+
+    - name: create env file
+      run: |
+        touch .env
+        echo "${{ secrets.ENV_VARS }}" >> .env
+
+    - name: create env file
+      uses: actions/checkout@main
       with:
         host: ${{ secrets.HOST }}
         username: ubuntu
