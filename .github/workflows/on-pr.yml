@@ -22,8 +22,8 @@ jobs:
 
             - name: create env file
               run: |
-                  touch config/.env
-                  echo "${{ secrets.ENV_VARS }}" >> config/.env
+                  touch .env
+                  echo "${{ secrets.ENV_VARS }}" >> .env
 
             - name: npm install, run lint
               run: |
