@@ -1,8 +1,9 @@
 name: Deploy to EC2
 on:
   pull_request:
-    branches: developmentjobs:
+    branches: development
 
+jobs:
   build:
     name: Deploy
     runs-on: ubuntu-latest
