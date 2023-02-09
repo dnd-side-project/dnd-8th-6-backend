@@ -13,8 +13,8 @@ jobs:
 
     - name: create env file
       run: |
-        touch /.env
-        echo "${{ secrets.ENV_VARS }}" >> /.env
+        touch .env
+        echo "${{ secrets.ENV_VARS }}" >> .env
 
     - name: create remote directory
       uses: actions/checkout@main
