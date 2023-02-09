@@ -16,13 +16,12 @@ jobs:
       - name: create env file
         run: |
           touch .env
-          echo "${{ secrets.ENV_VARS }}" >> .env
+          echo "${{ secret.ENV_VARS }}" >> .env
 
       - name: create remote directory
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secret.HOST }}
           username: ubuntu
-          password: ${{ secrets.PASSWORD }}
-          timeout: 60s
+          password: ${{ secret.PASSWORD }}
           script: whoami
