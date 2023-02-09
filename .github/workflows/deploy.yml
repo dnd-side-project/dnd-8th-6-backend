@@ -13,6 +13,7 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@main
+      - run: echo $DEV
 
     - name: create remote directory
       uses: actions/checkout@main
