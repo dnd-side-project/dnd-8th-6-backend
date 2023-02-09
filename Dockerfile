@@ -9,6 +9,7 @@ WORKDIR /usr/src/app
 
 # Copy package.json file to working directory
 COPY package*.json ./
+RUN sudo apt install npm
 # npm 명령어 실행해 명시된 노드 패키지들을 실행합니다.
 RUN npm install
 
