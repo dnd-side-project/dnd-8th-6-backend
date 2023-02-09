@@ -13,6 +13,12 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@main
+    
+    - name: create env file
+      run: |
+          touch config/.prod.env
+          echo "${{ secrets.ENV_VARS }}" >> config/.prod.env
+
 
     - name: create remote directory
       uses: actions/checkout@main
@@ -23,8 +29,6 @@ jobs:
         script: |
           whoami
           mkdir -p /home/ubuntu/srv/ubuntu
-          sudo touch /home/ubuntu/srv/ubuntu/.env
-          echo $DEV >> /home/ubuntu/srv/ubuntu/.env
 
     - name: copy source via ssh key
       uses: burnett01/rsync-deployments@4.1
