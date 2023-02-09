@@ -16,8 +16,8 @@ jobs:
     
     - name: create env file
       run: |
-          touch config/.prod.env
-          echo "${{ secrets.ENV_VARS }}" >> config/.prod.env
+          touch src/config/.prod.env
+          echo "${{ secrets.ENV_VARS }}" >> src/config/.prod.env
 
 
     - name: create remote directory
