@@ -7,14 +7,12 @@ jobs:
   build:
     name: Deploy
     runs-on: ubuntu-latest
+    env:
+      DEV: ${{ secrets.ENV_VARS }}
+
     steps:
     - name: checkout
       uses: actions/checkout@main
-
-    - name: create env file
-      run: |
-        touch .env
-        echo "${{ secrets.ENV_VARS }}" >> .env
 
     - name: create remote directory
       uses: actions/checkout@main
@@ -25,8 +23,6 @@ jobs:
         script: |
           whoami
           mkdir -p /home/ubuntu/srv/ubuntu
-          sudo touch /home/ubuntu/srv/ubuntu/.env
-          sudo echo "${{ secrets.ENV_VARS }}" >> /home/ubuntu/srv/ubuntu/.env
 
     - name: copy source via ssh key
       uses: burnett01/rsync-deployments@4.1
