@@ -16,7 +16,7 @@ jobs:
         touch .env
         echo "${{ secrets.ENV_VARS }}" >> .env
 
-    - name: create env file
+    - name: create remote directory
       uses: actions/checkout@main
       with:
         host: ${{ secrets.HOST }}
