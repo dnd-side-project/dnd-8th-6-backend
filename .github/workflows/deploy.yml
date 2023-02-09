@@ -40,7 +40,7 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ubuntu
-        password: ${{ secrets.PASSWORD }}
+        key: ${{ secrets.KEY }}
         script: |
           sudo yes y | sudo docker image prune
           sudo yes y | sudo docker container prune
@@ -51,6 +51,6 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ubuntu
-        password: ${{ secrets.PASSWORD }}
+        key: ${{ secrets.KEY }}
         script: |
-          sh /home/ubuntu/srv/ubuntu/deploy.sh
+          sudo sh /home/ubuntu/srv/ubuntu/deploy.sh
