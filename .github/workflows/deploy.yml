@@ -8,18 +8,15 @@ jobs:
   build:
     name: Deploy
     runs-on: ubuntu-latest
-
     steps:
       - name: checkout
         uses: actions/checkout@main
-
       - name: create env file
         run: |
           touch .env
           echo "${{ secrets.ENV_VARS }}" >> .env
-
       - name: create remote directory
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ubuntu
