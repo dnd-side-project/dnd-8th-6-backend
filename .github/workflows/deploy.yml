@@ -1,0 +1,56 @@
+name: Deploy to EC2
+on:
+  push:
+    branches: master
+
+jobs:
+  build:
+    name: Deploy
+    runs-on: ubuntu-latest
+    env:
+      DEV: ${{ secrets.ENV_VARS }}
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@main
+    
+    - name: create remote directory
+      uses: actions/checkout@main
+      with:
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        password: ${{ secrets.PASSWORD }}
+        script: |
+          whoami
+          mkdir -p /home/ubuntu/srv/ubuntu
+
+    - name: copy source via ssh key
+      uses: burnett01/rsync-deployments@4.1
+      with:
+        switches: -avzr --delete
+        remote_path: /home/ubuntu/srv/ubuntu/
+        remote_host: ${{ secrets.HOST }}
+        remote_user: ubuntu
+        remote_key: ${{ secrets.KEY }}
+
+    - name: delete useless images and containers
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        key: ${{ secrets.KEY }}
+        script: |
+          sudo cp ${{ secrets.ENV_ROUTE }} ${{ secrets.ENV_DIR_ROUTE }}
+          sudo yes y | sudo docker image prune
+          sudo yes y | sudo docker container prune
+          sudo yes y | sudo docker system prune -af
+
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        key: ${{ secrets.KEY }}
+        timeout: 180s
+        script: |
+          sh /home/ubuntu/srv/ubuntu/deploy.sh
