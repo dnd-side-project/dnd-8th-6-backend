@@ -40,7 +40,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.KEY }}
         script: |
-          sudo cp ${{ ENV_ROUTE }} ${{ ENV_DIR_ROUTE }}
+          sudo cp ${{ secrets.ENV_ROUTE }} ${{ secrets.ENV_DIR_ROUTE }}
           sudo yes y | sudo docker image prune
           sudo yes y | sudo docker container prune
           sudo yes y | sudo docker system prune -af
