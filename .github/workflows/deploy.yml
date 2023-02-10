@@ -18,6 +18,7 @@ jobs:
       run: |
           touch .env
           echo "${{ secrets.ENV_VARS }}" >> .env
+          cat .env
 
 
     - name: create remote directory
