@@ -11,4 +11,9 @@ export class AuthController {
   async kakaoLogin(@Query('code') code: string): Promise<Member> {
     return await this.authService.signIn(SocialType.KAKAO, code);
   }
+
+  @Get('/github/login')
+  async githubLogin(@Query('code') code: string): Promise<Member> {
+    return await this.authService.signIn(SocialType.GITHUB, code);
+  }
 }
