@@ -47,7 +47,7 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ubuntu
-        key: ${{ secrets.KEY }}
+        password: ${{ secrets.PASSWORD }}
         script: |
           sudo yes y | sudo docker image prune
           sudo yes y | sudo docker container prune
