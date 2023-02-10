@@ -23,7 +23,6 @@ jobs:
         script: |
           whoami
           mkdir -p /home/ubuntu/srv/ubuntu
-          cp /home/.env /home/ubuntu/srv/ubuntu/.env
 
     - name: copy source via ssh key
       uses: burnett01/rsync-deployments@4.1
@@ -41,6 +40,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.KEY }}
         script: |
+          sudo cp /home/.env /home/ubuntu/srv/ubuntu/.env
           sudo yes y | sudo docker image prune
           sudo yes y | sudo docker container prune
           sudo yes y | sudo docker system prune -af
