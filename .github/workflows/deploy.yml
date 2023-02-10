@@ -14,14 +14,6 @@ jobs:
     - name: checkout
       uses: actions/checkout@main
     
-    - name: create env file
-      run: |
-          touch .env
-          echo "${{ secrets.ENV_VARS }}" >> .env
-          cat .env
-          pwd
-
-
     - name: create remote directory
       uses: actions/checkout@main
       with:
@@ -31,8 +23,8 @@ jobs:
         script: |
           whoami
           mkdir -p /home/ubuntu/srv/ubuntu
-          sudo touch .env
-          echo "${{ secrets.ENV_VARS }}" >> sudo .env
+          touch .env
+          echo "${{ secrets.ENV_VARS }}" >>  .env
 
     - name: copy source via ssh key
       uses: burnett01/rsync-deployments@4.1
@@ -42,6 +34,13 @@ jobs:
         remote_host: ${{ secrets.HOST }}
         remote_user: ubuntu
         remote_key: ${{ secrets.KEY }}
+
+    - name: create env file
+      run: |
+          touch .env
+          echo "${{ secrets.ENV_VARS }}" >> .env
+          cat .env
+          pwd
 
     - name: delete useless images and containers
       uses: appleboy/ssh-action@master
