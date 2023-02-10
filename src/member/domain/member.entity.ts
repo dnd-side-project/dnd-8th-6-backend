@@ -3,7 +3,7 @@ import { SocialType } from './social-type.enum';
 
 @Entity()
 export class Member extends BaseEntity {
-  @PrimaryGeneratedColumn('identity')
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column({
@@ -15,7 +15,7 @@ export class Member extends BaseEntity {
   socialType!: SocialType;
 
   @Column()
-  socialId!: number;
+  socialId!: string;
 
   @Column({
     nullable: true,

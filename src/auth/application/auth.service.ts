@@ -4,21 +4,23 @@ import { SocialType } from '../../member/domain/social-type.enum';
 import { MemberRepository } from '../../member/repository/member.repository';
 import { SocialInfoDto } from './dto/social-info.dto';
 import { Member } from '../../member/domain/member.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(MemberRepository)
     private readonly memberRepository: MemberRepository,
     private readonly oauthFactory: OauthFactory,
   ) {}
 
-  async signIn(socialType: SocialType, code: string): Promise<Member> {
+  public async signIn(socialType: SocialType, code: string): Promise<Member> {
     const oauthClient = this.oauthFactory.getClient(socialType);
 
-    const accessToken = await oauthClient.getAccessCode(code);
+    const accessToken = await oauthClient.getAccessToken(code);
     const socialInfo = await oauthClient.getSocialInfo(accessToken);
 
-    const member = this.memberRepository.findOne({
+    const member = await this.memberRepository.findOne({
       socialId: socialInfo.socialId,
       socialType: socialInfo.socialType,
     });
@@ -30,7 +32,7 @@ export class AuthService {
     return await this.signUp(socialInfo);
   }
 
-  async signUp(socialInfo: SocialInfoDto): Promise<Member> {
+  private async signUp(socialInfo: SocialInfoDto): Promise<Member> {
     const member = await this.memberRepository.create({
       name: socialInfo.name,
       socialId: socialInfo.socialId,
