@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 # npm 명령어 실행해 명시된 노드 패키지들을 실행합니다.
 RUN npm config set registry https://registry.npmjs.cf/
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy project
 COPY . ./
