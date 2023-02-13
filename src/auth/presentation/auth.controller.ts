@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AuthService } from '../application/auth.service';
 import { SocialType } from '../../member/domain/social-type.enum';
 import { TokenResponseDto } from './dto/token-response.dto';
@@ -15,5 +15,12 @@ export class AuthController {
   @Get('/github/login')
   async githubLogin(@Query('code') code: string): Promise<TokenResponseDto> {
     return await this.authService.signIn(SocialType.GITHUB, code);
+  }
+
+  @Post('/reissue')
+  async reissueByRefreshToken(
+    @Body('refreshToken') refreshToken: string,
+  ): Promise<TokenResponseDto> {
+    return await this.authService.reissue(refreshToken);
   }
 }

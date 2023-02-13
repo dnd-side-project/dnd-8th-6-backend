@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { OauthFactory } from './oauth.factory';
 import { SocialType } from '../../member/domain/social-type.enum';
 import { MemberRepository } from '../../member/repository/member.repository';
@@ -35,6 +35,21 @@ export class AuthService {
     }
 
     return await this.createToken(member);
+  }
+
+  public async reissue(refreshToken: string) {
+    const expiresIn = parseInt(this.getExpiresIn(refreshToken));
+    const now = Math.floor(Date.now() / 1000);
+
+    const member = await this.memberRepository.findOne({
+      refreshToken: refreshToken,
+    });
+
+    if (expiresIn >= now && member) {
+      return await this.createToken(member);
+    }
+
+    throw new UnauthorizedException('유효하지 않은 토큰');
   }
 
   private async signUp(socialInfo: SocialInfoDto): Promise<Member> {
@@ -87,7 +102,7 @@ export class AuthService {
     });
   }
 
-  private getExpiresIn(token: string) {
+  private getExpiresIn(token: string): string {
     const decode = this.jwtService.decode(token, {});
     return decode['exp'];
   }
