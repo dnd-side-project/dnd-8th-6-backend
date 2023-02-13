@@ -6,6 +6,8 @@ import { SocialType } from '../../member/domain/social-type.enum';
 import { MockMemberRepository } from './mock-member.repository';
 import { MockOauthFactory } from './mock-oauth.factory';
 import { RuntimeException } from '@nestjs/core/errors/exceptions/runtime.exception';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { MockJwtService } from './mock-jwt.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -14,6 +16,10 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        {
+          provide: JwtService,
+          useClass: MockJwtService,
+        },
         {
           provide: OauthFactory,
           useClass: MockOauthFactory,
@@ -52,8 +58,8 @@ describe('AuthService', () => {
   });
 
   it('올바르지 않은 코드를 입력하면 에러가 발생한다.', async () => {
-    expect(await service.signIn(SocialType.GITHUB, 'invalidToken')).toThrow(
-      RuntimeException,
-    );
+    await expect(async () => {
+      await service.signIn(SocialType.GITHUB, 'invalidToken');
+    }).rejects.toThrow(RuntimeException);
   });
 });

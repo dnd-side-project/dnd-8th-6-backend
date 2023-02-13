@@ -1,4 +1,4 @@
-import { MockOauthClient } from './MockOauthClient';
+import { MockOauthClient } from './mock-oauth.client';
 
 export class MockOauthFactory {
   getClient() {
