@@ -6,11 +6,12 @@ import { SocialType } from '../../member/domain/social-type.enum';
 import { MockMemberRepository } from './mock-member.repository';
 import { MockOauthFactory } from './mock-oauth.factory';
 import { RuntimeException } from '@nestjs/core/errors/exceptions/runtime.exception';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { MockJwtService } from './mock-jwt.service';
 
 describe('AuthService', () => {
   let service: AuthService;
+  let memberRepository: MemberRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -32,6 +33,7 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    memberRepository = module.get<MemberRepository>(MemberRepository);
   });
 
   it('should be defined', () => {
@@ -61,5 +63,14 @@ describe('AuthService', () => {
     await expect(async () => {
       await service.signIn(SocialType.GITHUB, 'invalidToken');
     }).rejects.toThrow(RuntimeException);
+  });
+
+  it('로그아웃을 요청하면 refreshToken 의 값을 제거한다.', async () => {
+    const member = await memberRepository.findOne();
+    member.setRefreshToken('refreshToken');
+
+    await service.signOut(member);
+
+    expect(member.refreshToken).toBeNull();
   });
 });
