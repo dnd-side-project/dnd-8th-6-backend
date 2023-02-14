@@ -7,7 +7,7 @@ export class CommitLog extends BaseEntity {
   id: number;
 
   @Column({ type: 'int', name: 'commit_cnt', default: 0, nullable: false  })
-  commitCnt!: Member;
+  commitCnt!: number;
 
   @Column({ type: 'date', name: 'commit_date', nullable: false })
   commitDate!: Date;
