@@ -17,7 +17,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async signIn(
+  public async login(
     socialType: SocialType,
     code: string,
   ): Promise<TokenResponseDto> {
@@ -31,7 +31,7 @@ export class AuthService {
       socialType: socialInfo.socialType,
     });
     if (!member) {
-      member = await this.signUp(socialInfo);
+      member = await this.register(socialInfo);
     }
 
     return await this.createToken(member);
@@ -52,12 +52,12 @@ export class AuthService {
     throw new UnauthorizedException('유효하지 않은 토큰');
   }
 
-  public async signOut(member: Member): Promise<void> {
+  public async logout(member: Member): Promise<void> {
     member.setRefreshToken(null);
     await this.memberRepository.save(member);
   }
 
-  private async signUp(socialInfo: SocialInfoDto): Promise<Member> {
+  private async register(socialInfo: SocialInfoDto): Promise<Member> {
     const member = await this.memberRepository.create({
       name: socialInfo.name,
       socialId: socialInfo.socialId,

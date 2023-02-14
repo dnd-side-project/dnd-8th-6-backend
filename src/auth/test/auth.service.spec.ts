@@ -55,13 +55,13 @@ describe('AuthService', () => {
   // });
 
   it('올바른 코드로 로그인에 성공하면, 토큰을 반환한다.', async () => {
-    const token = await service.signIn(SocialType.GITHUB, 'validToken');
+    const token = await service.login(SocialType.GITHUB, 'validToken');
     expect(token).not.toBeNull();
   });
 
   it('올바르지 않은 코드를 입력하면 에러가 발생한다.', async () => {
     await expect(async () => {
-      await service.signIn(SocialType.GITHUB, 'invalidToken');
+      await service.login(SocialType.GITHUB, 'invalidToken');
     }).rejects.toThrow(RuntimeException);
   });
 
@@ -69,7 +69,7 @@ describe('AuthService', () => {
     const member = await memberRepository.findOne();
     member.setRefreshToken('refreshToken');
 
-    await service.signOut(member);
+    await service.logout(member);
 
     expect(member.refreshToken).toBeNull();
   });

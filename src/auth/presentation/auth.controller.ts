@@ -12,12 +12,12 @@ export class AuthController {
 
   @Get('/kakao/login')
   async kakaoLogin(@Query('code') code: string): Promise<TokenResponseDto> {
-    return await this.authService.signIn(SocialType.KAKAO, code);
+    return await this.authService.login(SocialType.KAKAO, code);
   }
 
   @Get('/github/login')
   async githubLogin(@Query('code') code: string): Promise<TokenResponseDto> {
-    return await this.authService.signIn(SocialType.GITHUB, code);
+    return await this.authService.login(SocialType.GITHUB, code);
   }
 
   @Post('/reissue')
@@ -30,6 +30,6 @@ export class AuthController {
   @UseGuards(AuthGuard())
   @Get('/logout')
   async logout(@GetMember() member: Member): Promise<void> {
-    return await this.authService.signOut(member);
+    return await this.authService.logout(member);
   }
 }
