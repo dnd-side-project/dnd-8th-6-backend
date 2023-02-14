@@ -3,6 +3,8 @@ import { AuthService } from '../application/auth.service';
 import { SocialType } from '../../member/domain/social-type.enum';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { GetMember } from './get-member.decorator';
+import { Member } from '../../member/domain/member.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -23,5 +25,11 @@ export class AuthController {
     @Body('refreshToken') refreshToken: string,
   ): Promise<TokenResponseDto> {
     return await this.authService.reissue(refreshToken);
+  }
+
+  @UseGuards(AuthGuard())
+  @Get('/logout')
+  async logout(@GetMember() member: Member): Promise<void> {
+    return await this.authService.signOut(member);
   }
 }

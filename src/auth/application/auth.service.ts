@@ -52,6 +52,11 @@ export class AuthService {
     throw new UnauthorizedException('유효하지 않은 토큰');
   }
 
+  public async signOut(member: Member): Promise<void> {
+    member.setRefreshToken(null);
+    await this.memberRepository.save(member);
+  }
+
   private async signUp(socialInfo: SocialInfoDto): Promise<Member> {
     const member = await this.memberRepository.create({
       name: socialInfo.name,
