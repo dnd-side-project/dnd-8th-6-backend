@@ -11,7 +11,7 @@ export class Star extends BaseEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'member_id' })
-  member!: Member;
+  member_id!: Member;
 
   @ManyToOne(() => Member, (member) => member.id, {
     nullable: false,
