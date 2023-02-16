@@ -8,7 +8,7 @@ import { LogDataModule } from './log-data/log-data.module';
 import { BlogModule } from './blog/blog.module';
 import { ProfileModule } from './profile/profile.module';
 import { StarModule } from './star/star.module';
-import { DataLogType } from './data-log-type/domain/data-log-type.entity';
+import { DataLogType } from './data-log-type/domain/log-type.entity';
 
 @Module({
     imports: [

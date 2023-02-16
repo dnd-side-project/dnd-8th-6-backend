@@ -1,4 +1,4 @@
-import { DataLogType } from 'src/data-log-type/domain/data-log-type.entity';
+import { DataLogType } from 'src/data-log-type/domain/log-type.entity';
 import { Member } from 'src/member/domain/member.entity';
 import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
