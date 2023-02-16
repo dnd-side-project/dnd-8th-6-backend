@@ -1,3 +1,4 @@
+import { DataLogType } from 'src/data-log-type/domain/data-log-type.entity';
 import { Member } from 'src/member/domain/member.entity';
 import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -18,4 +19,10 @@ export class LogData extends BaseEntity {
   })
   @JoinColumn({ name: 'member_id'})
   MemberId: string;
+
+  @ManyToOne(() => DataLogType, (dataLogType) => dataLogType.id, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'log_type_id'})
+  LogTypeId: DataLogType;
 }
