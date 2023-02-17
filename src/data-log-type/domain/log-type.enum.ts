@@ -1,0 +1,5 @@
+export enum LogType {
+  COMMIT = 'COMMIT',
+  COMMITDATE = 'COMMITDATE',
+  ARTICLECNT = 'ARTICLECNT',
+}

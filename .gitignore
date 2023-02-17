@@ -37,3 +37,4 @@ lerna-debug.log*
 # Configuration
 .env
 package-lock.json
+.vscode

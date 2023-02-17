@@ -27,8 +27,8 @@ jobs:
 
             - name: npm install, run lint
               run: |
-                npm install --legacy-peer-deps
-                npm run lint
+                  npm install --legacy-peer-deps
+                  npm run lint
               env:
                 CI: true
 
