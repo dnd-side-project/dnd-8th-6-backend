@@ -30,7 +30,7 @@ jobs:
                   npm install --legacy-peer-deps
                   npm run lint
               env:
-                  CI: true
+                CI: true
 
             # - name: Run Tests
             #   run: npm test
