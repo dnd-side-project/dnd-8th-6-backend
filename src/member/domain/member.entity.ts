@@ -1,7 +1,3 @@
-import { Blog } from 'src/member/domain/blog.entity';
-import { LogData } from 'src/log-data/domain/log-data.entity';
-import { Profile } from 'src/member/domain/profile.entity';
-import { Star } from 'src/star/domain/star.entity';
 import {
   BaseEntity,
   Column,
@@ -11,6 +7,10 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { SocialType } from './social-type.enum';
+import { LogData } from '../../log-data/domain/log-data.entity';
+import { Star } from '../../star/domain/star.entity';
+import { Profile } from './profile.entity';
+import { Blog } from './blog.entity';
 
 @Entity()
 export class Member extends BaseEntity {

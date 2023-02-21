@@ -1,6 +1,12 @@
-import { LogData } from 'src/log-data/domain/log-data.entity';
-import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { LogType } from './log-type.enum';
+import { LogData } from '../../log-data/domain/log-data.entity';
 
 @Entity()
 export class DataLogType extends BaseEntity {
