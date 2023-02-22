@@ -16,10 +16,15 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetMember } from '../../auth/presentation/get-member.decorator';
 import { Member } from '../domain/member.entity';
 import { UpdateMemberRequestDto } from './dto/update-member-request.dto';
+import { ProfileService } from '../application/profile.service';
+import { UpdateProfileRequestDto } from './dto/update-profile-request.dto';
 
 @Controller('member')
 export class MemberController {
-  constructor(private readonly memberService: MemberService) {}
+  constructor(
+    private readonly memberService: MemberService,
+    private readonly profileService: ProfileService,
+  ) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id')
@@ -61,5 +66,18 @@ export class MemberController {
       throw new UnauthorizedException();
     }
     return await this.memberService.deleteMember(id, refreshToken);
+  }
+
+  @Get('/:id/profile')
+  async getMemberProfile(@Param('id', ParseIntPipe) id: number) {
+    return await this.profileService.getProfile(id);
+  }
+
+  @Put('/:id/profile')
+  async updateMemberProfile(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProfileRequestDto: UpdateProfileRequestDto,
+  ) {
+    return await this.profileService.updateProfile(id, updateProfileRequestDto);
   }
 }

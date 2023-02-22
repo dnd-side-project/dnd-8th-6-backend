@@ -2,6 +2,7 @@ import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -16,5 +17,6 @@ export class Profile extends BaseEntity {
   description!: string;
 
   @OneToOne(() => Member, (member) => member.id, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'member_id' })
   member!: Member;
 }

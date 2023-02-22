@@ -2,15 +2,15 @@ import { SocialType } from '../../domain/social-type.enum';
 import { Member } from '../../domain/member.entity';
 
 export class MemberResponseDto {
-  id: number;
+  readonly id: number;
 
-  name: string;
+  readonly name: string;
 
-  socialType: SocialType;
+  readonly socialType: SocialType;
 
-  profileImageUrl: string;
+  readonly profileImageUrl: string;
 
-  githubId: string;
+  readonly githubId: string;
 
   constructor(member: Member) {
     this.id = member.id;

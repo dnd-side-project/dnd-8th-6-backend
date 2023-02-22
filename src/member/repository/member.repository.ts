@@ -4,8 +4,14 @@ import { BadRequestException } from '@nestjs/common';
 
 @EntityRepository(Member)
 export class MemberRepository extends Repository<Member> {
-  public async findOneOrThrow(id: number) {
-    const member = await this.findOne(id);
+  public async findOneOrThrow(id: number, options?) {
+    let member;
+
+    if (!options) {
+      member = await this.findOne(id);
+    } else {
+      member = await this.findOne(id, options);
+    }
 
     if (!member) {
       throw new BadRequestException('존재하지 않는 사용자 입니다.');
