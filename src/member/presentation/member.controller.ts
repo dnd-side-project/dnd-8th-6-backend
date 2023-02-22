@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Post,
   Put,
   Query,
   UnauthorizedException,
@@ -18,12 +19,17 @@ import { Member } from '../domain/member.entity';
 import { UpdateMemberRequestDto } from './dto/update-member-request.dto';
 import { ProfileService } from '../application/profile.service';
 import { UpdateProfileRequestDto } from './dto/update-profile-request.dto';
+import { BlogService } from '../application/blog.service';
+import { BlogRequestDto } from './dto/blog-request.dto';
+import { BlogResponseDto } from './dto/blog-response.dto';
+import { ProfileResponseDto } from './dto/profile-response.dto';
 
 @Controller('member')
 export class MemberController {
   constructor(
     private readonly memberService: MemberService,
     private readonly profileService: ProfileService,
+    private readonly blogService: BlogService,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -48,7 +54,7 @@ export class MemberController {
     @GetMember() member: Member,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMemberRequestDto: UpdateMemberRequestDto,
-  ) {
+  ): Promise<MemberResponseDto> {
     if (member.id !== id) {
       throw new UnauthorizedException();
     }
@@ -69,15 +75,68 @@ export class MemberController {
   }
 
   @Get('/:id/profile')
-  async getMemberProfile(@Param('id', ParseIntPipe) id: number) {
+  async getMemberProfile(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ProfileResponseDto> {
     return await this.profileService.getProfile(id);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Put('/:id/profile')
   async updateMemberProfile(
+    @GetMember() member: Member,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProfileRequestDto: UpdateProfileRequestDto,
-  ) {
+  ): Promise<ProfileResponseDto> {
+    if (member.id !== id) {
+      throw new UnauthorizedException();
+    }
     return await this.profileService.updateProfile(id, updateProfileRequestDto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:id/blog')
+  async getBlogInfo(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<BlogResponseDto> {
+    return await this.blogService.getBlogInfo(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/:id/blog')
+  async createBlogInfo(
+    @GetMember() member: Member,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() blogRequestDto: BlogRequestDto,
+  ): Promise<BlogResponseDto> {
+    if (member.id !== id) {
+      throw new UnauthorizedException();
+    }
+    return await this.blogService.createBlogInfo(id, blogRequestDto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Put('/:id/blog')
+  async updateBlogInfo(
+    @GetMember() member: Member,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() blogRequestDto: BlogRequestDto,
+  ): Promise<BlogResponseDto> {
+    if (member.id !== id) {
+      throw new UnauthorizedException();
+    }
+    return await this.blogService.updateBlogInfo(id, blogRequestDto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('/:id/blog')
+  async deleteBlogInfo(
+    @GetMember() member: Member,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    if (member.id !== id) {
+      throw new UnauthorizedException();
+    }
+    return await this.blogService.deleteBlogInfo(id);
   }
 }

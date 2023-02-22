@@ -28,6 +28,13 @@ export class Blog extends BaseEntity {
   })
   platformType!: PlatformType;
 
+  @Column({
+    type: 'varchar',
+    name: 'blog_name',
+    nullable: false,
+  })
+  blogName!: string;
+
   @OneToOne(() => Member, (member) => member.id)
   @JoinColumn({ name: 'member_id' })
   member!: Member;

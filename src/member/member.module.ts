@@ -6,6 +6,7 @@ import { MemberService } from './application/member.service';
 import { BlogRepository } from './repository/blog.repository';
 import { ProfileRepository } from './repository/profile.repository';
 import { ProfileService } from './application/profile.service';
+import { BlogService } from './application/blog.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { ProfileService } from './application/profile.service';
       ProfileRepository,
     ]),
   ],
-  providers: [MemberService, ProfileService],
+  providers: [MemberService, ProfileService, BlogService],
   controllers: [MemberController],
 })
 export class MemberModule {}

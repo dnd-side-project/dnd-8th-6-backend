@@ -1,4 +1,4 @@
 export class UpdateMemberRequestDto {
-  name: string;
-  githubId: string;
+  readonly name: string;
+  readonly githubId: string;
 }
