@@ -6,7 +6,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { PlaformType } from './plaform-type.enum';
+import { PlatformType } from './platform-type.enum';
 import { Member } from './member.entity';
 
 @Entity()
@@ -22,11 +22,11 @@ export class Blog extends BaseEntity {
 
   @Column({
     type: 'enum',
-    name: 'plaform_type',
+    name: 'platform_type',
     nullable: false,
-    enum: PlaformType,
+    enum: PlatformType,
   })
-  plaformType!: PlaformType;
+  platformType!: PlatformType;
 
   @OneToOne(() => Member, (member) => member.id)
   @JoinColumn({ name: 'member_id' })
