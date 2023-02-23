@@ -7,6 +7,8 @@ import { BlogRepository } from './repository/blog.repository';
 import { ProfileRepository } from './repository/profile.repository';
 import { ProfileService } from './application/profile.service';
 import { BlogService } from './application/blog.service';
+import { GithubClient } from './application/github.client';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -15,8 +17,9 @@ import { BlogService } from './application/blog.service';
       BlogRepository,
       ProfileRepository,
     ]),
+    HttpModule,
   ],
-  providers: [MemberService, ProfileService, BlogService],
+  providers: [MemberService, ProfileService, BlogService, GithubClient],
   controllers: [MemberController],
 })
 export class MemberModule {}

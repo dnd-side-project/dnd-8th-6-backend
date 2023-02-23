@@ -23,6 +23,7 @@ import { BlogService } from '../application/blog.service';
 import { BlogRequestDto } from './dto/blog-request.dto';
 import { BlogResponseDto } from './dto/blog-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
+import { GithubInfoResponseDto } from '../application/dto/github-info-response.dto';
 
 @Controller('member')
 export class MemberController {
@@ -38,6 +39,14 @@ export class MemberController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<MemberResponseDto> {
     return await this.memberService.getMemberById(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:id/github')
+  async getGithubInfoById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<GithubInfoResponseDto> {
+    return await this.memberService.getGithubInfoById(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
