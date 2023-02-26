@@ -9,7 +9,10 @@ async function bootstrap() {
     .setTitle('Sleact API')
     .setDescription('Dev sleact docs')
     .setVersion('1.0')
-    .addCookieAuth('connect.sid')
+    .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'Token' },
+        'access-token',
+      )
     .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api-docs', app, document);
