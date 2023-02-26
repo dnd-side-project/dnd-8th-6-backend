@@ -4,9 +4,8 @@ import { typeORMConfig } from './configs/typeorm.config';
 import { UserModule } from './user/user.module';
 import { MemberModule } from './member/member.module';
 import { AuthModule } from './auth/auth.module';
-import { LogDataModule } from './log-data/log-data.module';
 import { StarModule } from './star/star.module';
-import { DataLogType } from './data-log-type/domain/log-type.entity';
+import { RankModule } from './rank/rank.module';
 
 @Module({
   imports: [
@@ -14,8 +13,7 @@ import { DataLogType } from './data-log-type/domain/log-type.entity';
     UserModule,
     MemberModule,
     AuthModule,
-    LogDataModule,
-    DataLogType,
+    RankModule,
     StarModule,
   ],
 })

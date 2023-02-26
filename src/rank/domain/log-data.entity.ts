@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Member } from '../../member/domain/member.entity';
-import { DataLogType } from '../../data-log-type/domain/log-type.entity';
+import { DataLogType } from './log-type.entity';
 
 @Entity()
 export class LogData extends BaseEntity {
