@@ -9,6 +9,7 @@ import { ProfileService } from './application/profile.service';
 import { BlogService } from './application/blog.service';
 import { GithubClient } from './application/github.client';
 import { HttpModule } from '@nestjs/axios';
+import { Crawler } from './application/crawler';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { HttpModule } from '@nestjs/axios';
     ]),
     HttpModule,
   ],
-  providers: [MemberService, ProfileService, BlogService, GithubClient],
+  providers: [MemberService, ProfileService, BlogService, GithubClient, Crawler],
   controllers: [MemberController],
 })
 export class MemberModule {}

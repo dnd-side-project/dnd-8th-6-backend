@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { LogType } from './log-type.enum';
-import { LogData } from '../../log-data/domain/log-data.entity';
+import { LogData } from './log-data.entity';
 
 @Entity()
 export class DataLogType extends BaseEntity {

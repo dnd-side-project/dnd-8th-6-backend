@@ -9,6 +9,9 @@ import { MemberResponseDto } from '../presentation/dto/member-response.dto';
 import { UpdateMemberRequestDto } from '../presentation/dto/update-member-request.dto';
 import { GithubClient } from './github.client';
 import { GithubInfoResponseDto } from './dto/github-info-response.dto';
+import puppeteer from 'puppeteer';
+import { GithubContribution } from './dto/github-contribution-response.dto';
+import { Crawler } from './crawler';
 
 @Injectable()
 export class MemberService {
@@ -16,6 +19,7 @@ export class MemberService {
     @InjectRepository(MemberRepository)
     private readonly memberRepository: MemberRepository,
     private readonly githubClient: GithubClient,
+    private readonly crawler: Crawler,
   ) {}
 
   public async getMemberById(id: number): Promise<MemberResponseDto> {
@@ -65,5 +69,22 @@ export class MemberService {
     }
 
     await this.memberRepository.delete(member);
+  }
+
+  async getGithubContributionById(id: number): Promise<GithubContribution[]> {
+    const member = await this.memberRepository.findOneOrThrow(id);
+
+    if (!member.githubId) {
+      throw new BadRequestException('github 계정이 등록되지 않았습니다.');
+    }
+    
+    await this.crawler.setConfig();
+    await this.crawler.accessSite(member.githubId);
+    await this.crawler.collecteContributionTag();
+    const githubContribution = await this.crawler.parseContributionTag();
+
+    await this.crawler.closeBrowser();
+
+    return githubContribution;
   }
 }

@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { SocialType } from './social-type.enum';
-import { LogData } from '../../log-data/domain/log-data.entity';
+import { LogData } from '../../rank/domain/log-data.entity';
 import { Star } from '../../star/domain/star.entity';
 import { Profile } from './profile.entity';
 import { Blog } from './blog.entity';

@@ -24,6 +24,7 @@ import { BlogRequestDto } from './dto/blog-request.dto';
 import { BlogResponseDto } from './dto/blog-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
 import { GithubInfoResponseDto } from '../application/dto/github-info-response.dto';
+import { GithubContribution } from '../application/dto/github-contribution-response.dto';
 
 @Controller('member')
 export class MemberController {
@@ -47,6 +48,14 @@ export class MemberController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<GithubInfoResponseDto> {
     return await this.memberService.getGithubInfoById(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:id/github/contribution')
+  async getGithubContributionById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<GithubContribution[]> {
+    return await this.memberService.getGithubContributionById(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
