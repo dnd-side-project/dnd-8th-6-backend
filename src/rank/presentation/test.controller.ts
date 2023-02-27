@@ -9,4 +9,9 @@ export class TestController {
   public async test() {
     await this.githubCronService.crawlGithubAndSaveOnRepository();
   }
+
+  @Get('/2')
+  public async test2() {
+    await this.githubCronService.countConsecutiveCommits();
+  }
 }

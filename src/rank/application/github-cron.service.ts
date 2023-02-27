@@ -35,7 +35,6 @@ export class GithubCronService {
       await this.crawler.accessSite(member.githubId);
       await this.crawler.collecteContributionTag();
       const githubContributions = await this.crawler.parseContributionTag();
-
       await this.crawler.closeBrowser();
 
       const legacyLogs = await this.logDataRepository
@@ -50,7 +49,7 @@ export class GithubCronService {
 
       for (const contribution of githubContributions) {
         if (!contribution.contribution) {
-          continue;
+          contribution.contribution = '0';
         }
 
         const logData = await this.logDataRepository.create({
@@ -62,6 +61,58 @@ export class GithubCronService {
 
         await this.logDataRepository.save(logData);
       }
+    }
+  }
+
+  public async countConsecutiveCommits() {
+    const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
+      where: {
+        logType: LogType.COMMITDATE,
+      },
+    });
+    const members = await this.memberRepository.find();
+
+    for (const member of members) {
+      if (!member.githubId) {
+        continue;
+      }
+
+      const legacyLog = await this.logDataRepository
+        .createQueryBuilder('data')
+        .where('data.member_id = :id', { id: member.id })
+        .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
+        .getOne();
+
+      if (legacyLog) {
+        await this.logDataRepository.delete(legacyLog);
+      }
+
+      // blog 데이터 포함하도록 함
+      const logs = await this.logDataRepository
+        .createQueryBuilder('data')
+        .where('data.member_id = :id', { id: member.id })
+        .orderBy('data.log_date', 'DESC')
+        .groupBy('data.log_date')
+        .getMany();
+
+      let consecutiveCount = 0;
+      for (const log of logs) {
+        if (log.dataLog !== 0) {
+          console.log(log);
+          consecutiveCount++;
+        } else {
+          break;
+        }
+      }
+
+      const logData = await this.logDataRepository.create({
+        dataLog: consecutiveCount,
+        logDate: logs[0].logDate,
+        memberId: String(member.id),
+        logTypeId: dataLogType,
+      });
+
+      await this.logDataRepository.save(logData);
     }
   }
 }
