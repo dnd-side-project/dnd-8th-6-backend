@@ -20,7 +20,14 @@ import { Crawler } from './application/crawler';
     ]),
     HttpModule,
   ],
-  providers: [MemberService, ProfileService, BlogService, GithubClient, Crawler],
+  providers: [
+    MemberService,
+    ProfileService,
+    BlogService,
+    GithubClient,
+    Crawler,
+  ],
   controllers: [MemberController],
+  exports: [Crawler],
 })
 export class MemberModule {}

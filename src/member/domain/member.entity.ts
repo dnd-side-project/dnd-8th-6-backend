@@ -47,7 +47,7 @@ export class Member extends BaseEntity {
   })
   refreshToken: string;
 
-  @OneToMany(() => LogData, (logData) => logData.MemberId)
+  @OneToMany(() => LogData, (logData) => logData.memberId)
   logData!: LogData[];
 
   @OneToMany(() => Star, (star) => star.memberId)
