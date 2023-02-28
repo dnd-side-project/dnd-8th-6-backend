@@ -5,6 +5,7 @@ import { LogDataRepository } from '../repository/log-data.repository';
 import { DataLogTypeRepository } from '../repository/commit-log.repository';
 import { Crawler } from '../../member/application/crawler';
 import { LogType } from '../domain/log-type.enum';
+import { LogData } from '../domain/log-data.entity';
 
 @Injectable()
 export class GithubCronService {
@@ -49,7 +50,8 @@ export class GithubCronService {
 
       for (const contribution of githubContributions) {
         if (!contribution.contribution) {
-          contribution.contribution = '0';
+          // contribution 이 없는 경우는 저장하지 않는다.
+          continue;
         }
 
         const logData = await this.logDataRepository.create({
@@ -95,18 +97,14 @@ export class GithubCronService {
         .groupBy('data.log_date')
         .getMany();
 
-      let consecutiveCount = 0;
-      for (const log of logs) {
-        if (log.dataLog !== 0) {
-          console.log(log);
-          consecutiveCount++;
-        } else {
-          break;
-        }
+      if (logs.length === 0) {
+        continue;
       }
+      const consecutiveDays = this.getConsecutiveDays(logs);
+      console.log(consecutiveDays);
 
       const logData = await this.logDataRepository.create({
-        dataLog: consecutiveCount,
+        dataLog: consecutiveDays,
         logDate: logs[0].logDate,
         memberId: String(member.id),
         logTypeId: dataLogType,
@@ -114,5 +112,46 @@ export class GithubCronService {
 
       await this.logDataRepository.save(logData);
     }
+  }
+
+  private getConsecutiveDays(logs: LogData[]) {
+    let prevDate = new Date(logs[0].logDate); // 이전 날짜
+    let consecutiveDays = 1; // 연속한 날짜 수
+
+    const referenceDate = this.getReferenceDate();
+
+    const diffOfNow = referenceDate.getTime() - prevDate.getTime();
+    const diffDayOfNow = diffOfNow / (1000 * 60 * 60 * 24);
+
+    // HEAD 의 날짜가 현 시간을 기준으로 하루 초과했다면 연속 갱신 실패
+    if (diffDayOfNow > 1) {
+      return 0;
+    }
+    // 데이터가 1일만 유효하다면 연속 1일
+    if (logs.length <= 1) {
+      return 1;
+    }
+
+    for (let i = 1; i < logs.length; i++) {
+      const currentDate = new Date(logs[i].logDate);
+      const diffTime = prevDate.getTime() - currentDate.getTime();
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+      if (diffDays === 1) {
+        consecutiveDays++;
+      } else if (diffDays > 1) {
+        // 연속하지 않은 날짜를 만나면 함수 종료
+        break;
+      }
+      prevDate = currentDate;
+    }
+    return consecutiveDays;
+  }
+  private getReferenceDate() {
+    const today = new Date();
+    const year = today.getUTCFullYear();
+    const month = today.getUTCMonth() + 1;
+    const day = today.getUTCDate();
+    return new Date(`${year}-${month}-${day}`);
   }
 }
