@@ -5,10 +5,10 @@ import { LogDataRepository } from './repository/log-data.repository';
 import { MemberRepository } from '../member/repository/member.repository';
 import { Crawler } from '../member/application/crawler';
 import { GithubCronService } from './application/github-cron.service';
-import { TestController } from './presentation/test.controller';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  controllers: [TestController],
+  controllers: [],
   providers: [Crawler, GithubCronService],
   imports: [
     TypeOrmModule.forFeature([
@@ -16,6 +16,7 @@ import { TestController } from './presentation/test.controller';
       DataLogTypeRepository,
       MemberRepository,
     ]),
+    ScheduleModule.forRoot(),
   ],
 })
 export class RankModule {}

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { MemberRepository } from '../../member/repository/member.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogDataRepository } from '../repository/log-data.repository';
@@ -6,9 +6,12 @@ import { DataLogTypeRepository } from '../repository/commit-log.repository';
 import { Crawler } from '../../member/application/crawler';
 import { LogType } from '../domain/log-type.enum';
 import { LogData } from '../domain/log-data.entity';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class GithubCronService {
+  private readonly logger = new Logger(GithubCronService.name);
+
   constructor(
     @InjectRepository(MemberRepository)
     private readonly memberRepository: MemberRepository,
@@ -19,6 +22,7 @@ export class GithubCronService {
     private readonly crawler: Crawler,
   ) {}
 
+  @Cron('0 0 */1 * * *')
   public async crawlGithubAndSaveOnRepository() {
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
       where: {
@@ -64,8 +68,10 @@ export class GithubCronService {
         await this.logDataRepository.save(logData);
       }
     }
+    this.logger.log(`github crawl complete on: ${new Date().getTime()}`);
   }
 
+  @Cron('0 30 */1 * * *')
   public async countConsecutiveCommits() {
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
       where: {
@@ -101,7 +107,6 @@ export class GithubCronService {
         continue;
       }
       const consecutiveDays = this.getConsecutiveDays(logs);
-      console.log(consecutiveDays);
 
       const logData = await this.logDataRepository.create({
         dataLog: consecutiveDays,
@@ -112,6 +117,7 @@ export class GithubCronService {
 
       await this.logDataRepository.save(logData);
     }
+    this.logger.log(`count consecutive complete on: ${new Date().getTime()}`);
   }
 
   private getConsecutiveDays(logs: LogData[]) {
