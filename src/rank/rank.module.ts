@@ -4,12 +4,12 @@ import { DataLogTypeRepository } from './repository/commit-log.repository';
 import { LogDataRepository } from './repository/log-data.repository';
 import { MemberRepository } from '../member/repository/member.repository';
 import { Crawler } from '../member/application/crawler';
-import { GithubCronService } from './application/github-cron.service';
+import { LogDataCronService } from './application/log-data-cron.service';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   controllers: [],
-  providers: [Crawler, GithubCronService],
+  providers: [Crawler, LogDataCronService],
   imports: [
     TypeOrmModule.forFeature([
       LogDataRepository,

@@ -10,8 +10,8 @@ import { Cron } from '@nestjs/schedule';
 import { GithubContribution } from '../../member/application/dto/github-contribution-response.dto';
 
 @Injectable()
-export class GithubCronService {
-  private readonly logger = new Logger(GithubCronService.name);
+export class LogDataCronService {
+  private readonly logger = new Logger(LogDataCronService.name);
 
   constructor(
     @InjectRepository(MemberRepository)
