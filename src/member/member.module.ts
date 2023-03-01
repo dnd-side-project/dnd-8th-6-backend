@@ -32,5 +32,6 @@ import { DataLogTypeRepository } from '../rank/repository/commit-log.repository'
     Crawler,
   ],
   controllers: [MemberController],
+  exports: [Crawler],
 })
 export class MemberModule {}
