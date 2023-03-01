@@ -10,6 +10,8 @@ import { BlogService } from './application/blog.service';
 import { GithubClient } from './application/github.client';
 import { HttpModule } from '@nestjs/axios';
 import { Crawler } from './application/crawler';
+import { LogDataRepository } from '../rank/repository/log-data.repository';
+import { DataLogTypeRepository } from '../rank/repository/commit-log.repository';
 
 @Module({
   imports: [
@@ -17,10 +19,18 @@ import { Crawler } from './application/crawler';
       MemberRepository,
       BlogRepository,
       ProfileRepository,
+      LogDataRepository,
+      DataLogTypeRepository,
     ]),
     HttpModule,
   ],
-  providers: [MemberService, ProfileService, BlogService, GithubClient, Crawler],
+  providers: [
+    MemberService,
+    ProfileService,
+    BlogService,
+    GithubClient,
+    Crawler,
+  ],
   controllers: [MemberController],
 })
 export class MemberModule {}

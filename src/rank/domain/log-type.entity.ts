@@ -16,6 +16,6 @@ export class DataLogType extends BaseEntity {
   @Column({ type: 'enum', name: 'log_type', nullable: false, enum: LogType })
   logType!: LogType;
 
-  @OneToMany(() => LogData, (logData) => logData.LogTypeId)
+  @OneToMany(() => LogData, (logData) => logData.logTypeId)
   logData!: LogData;
 }
