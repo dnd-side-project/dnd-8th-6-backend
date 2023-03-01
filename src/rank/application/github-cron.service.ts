@@ -7,6 +7,7 @@ import { Crawler } from '../../member/application/crawler';
 import { LogType } from '../domain/log-type.enum';
 import { LogData } from '../domain/log-data.entity';
 import { Cron } from '@nestjs/schedule';
+import { GithubContribution } from '../../member/application/dto/github-contribution-response.dto';
 
 @Injectable()
 export class GithubCronService {
@@ -22,7 +23,7 @@ export class GithubCronService {
     private readonly crawler: Crawler,
   ) {}
 
-  @Cron('0 0 */1 * * *')
+  @Cron('0 0 */2 * * *')
   public async crawlGithubAndSaveOnRepository() {
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
       where: {
@@ -36,10 +37,21 @@ export class GithubCronService {
         continue;
       }
 
+      // 여기를 연간 조회 N 번으로 수정해야 함
       await this.crawler.setConfig();
       await this.crawler.accessSite(member.githubId);
-      await this.crawler.collecteContributionTag();
-      const githubContributions = await this.crawler.parseContributionTag();
+      await this.crawler.collectYearTags();
+      const years = await this.crawler.parseYearTag();
+      const contributionsSet = new Set<GithubContribution>();
+
+      for (const year of years) {
+        await this.crawler.accessSiteWithYear(member.githubId, year);
+        await this.crawler.collecteContributionTag();
+        const githubContributions = await this.crawler.parseContributionTag();
+        githubContributions.forEach((c) => contributionsSet.add(c));
+      }
+      const githubContributions = Array.from(contributionsSet);
+
       await this.crawler.closeBrowser();
 
       const legacyLogs = await this.logDataRepository
@@ -71,7 +83,7 @@ export class GithubCronService {
     this.logger.log(`github crawl complete on: ${new Date().getTime()}`);
   }
 
-  @Cron('0 30 */1 * * *')
+  @Cron('0 30 */2 * * *')
   public async countConsecutiveCommits() {
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
       where: {
