@@ -8,6 +8,7 @@ import { LogType } from '../domain/log-type.enum';
 import { LogData } from '../domain/log-data.entity';
 import { Cron } from '@nestjs/schedule';
 import { GithubContribution } from '../../member/application/dto/github-contribution-response.dto';
+import { Member } from '../../member/domain/member.entity';
 
 @Injectable()
 export class LogDataCronService {
@@ -37,20 +38,18 @@ export class LogDataCronService {
         continue;
       }
 
-      // 여기를 연간 조회 N 번으로 수정해야 함
       await this.crawler.setConfig();
-      await this.crawler.accessSite(member.githubId);
-      await this.crawler.collectYearTags();
-      const years = await this.crawler.parseYearTag();
-      const contributionsSet = new Set<GithubContribution>();
+      const years = await this.getYearsRangeOfGithub(member);
+
+      const contributions = new Set<GithubContribution>();
 
       for (const year of years) {
-        await this.crawler.accessSiteWithYear(member.githubId, year);
-        await this.crawler.collecteContributionTag();
-        const githubContributions = await this.crawler.parseContributionTag();
-        githubContributions.forEach((c) => contributionsSet.add(c));
+        const githubContributions = await this.getContributionsOfYears(
+          member,
+          year,
+        );
+        githubContributions.forEach((c) => contributions.add(c));
       }
-      const githubContributions = Array.from(contributionsSet);
 
       await this.crawler.closeBrowser();
 
@@ -64,7 +63,7 @@ export class LogDataCronService {
         await this.logDataRepository.delete(log);
       }
 
-      for (const contribution of githubContributions) {
+      for (const contribution of contributions) {
         if (!contribution.contribution) {
           // contribution 이 없는 경우는 저장하지 않는다.
           continue;
@@ -76,11 +75,25 @@ export class LogDataCronService {
           memberId: String(member.id),
           logTypeId: dataLogType,
         });
-
         await this.logDataRepository.save(logData);
       }
     }
     this.logger.log(`github crawl complete on: ${new Date().getTime()}`);
+  }
+
+  private async getYearsRangeOfGithub(member: Member): Promise<number[]> {
+    await this.crawler.accessSite(member.githubId);
+    await this.crawler.collectYearTags();
+    return await this.crawler.parseYearTag();
+  }
+
+  private async getContributionsOfYears(
+    member: Member,
+    year: number,
+  ): Promise<GithubContribution[]> {
+    await this.crawler.accessSiteWithYear(member.githubId, year);
+    await this.crawler.collecteContributionTag();
+    return await this.crawler.parseContributionTag();
   }
 
   @Cron('0 30 */2 * * *')
@@ -165,6 +178,7 @@ export class LogDataCronService {
     }
     return consecutiveDays;
   }
+
   private getReferenceDate() {
     const today = new Date();
     const year = today.getUTCFullYear();
