@@ -48,6 +48,20 @@ export class NaverCollector {
     return this.baseUrl.replace('nbcurPage', pageNo.toString());
   }
 
+  serialize() {
+    this._jsonData = this._jsonData.reduce((acc, cur) => {
+      const {title, pubDate} = cur;
+      const pubDateOnly = pubDate.toISOString().substring(0, 10);
+      const existingData = acc.find(({pubDate}) => pubDate === pubDateOnly);
+      if (existingData) {
+        existingData.articles.push(title);
+      } else {
+        acc.push({pubDate: pubDateOnly, articles: [title]});
+      }
+      return acc;
+    }, []);
+  }
+
   set author(author:string) {
     this._author = author;
     this.baseUrl = `https://blog.naver.com/PostTitleListAsync.naver?blogId=${author}&viewdate=&currentPage=nbcurPage&categoryNo=0&parentCategoryNo=&countPerPage=30`;

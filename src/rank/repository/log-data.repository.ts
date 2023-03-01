@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { LogDataDto } from '../application/dto/LogData.dto';
+import { LogDataDto } from '../application/dto/log-data.dto';
 import { LogData } from '../domain/log-data.entity';
 
 @EntityRepository(LogData)

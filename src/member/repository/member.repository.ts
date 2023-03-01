@@ -1,7 +1,6 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Member } from '../domain/member.entity';
 import { BadRequestException } from '@nestjs/common';
-import { Blog } from '../domain/blog.entity';
 
 @EntityRepository(Member)
 export class MemberRepository extends Repository<Member> {

@@ -11,7 +11,7 @@ import { GithubContribution } from '../../member/application/dto/github-contribu
 import { Member } from '../../member/domain/member.entity';
 import { VelogCollector } from './velog.collector';
 import { NaverCollector } from './naver.collector';
-import { LogDataDto } from './dto/LogData.dto';
+import { LogDataDto } from './dto/log-data.dto';
 
 
 @Injectable()
@@ -42,6 +42,27 @@ export class LogDataCronService {
       await this.velogCollector.convertXml2Json();
       this.velogCollector.serialize();
       const res = await Promise.all(this.velogCollector.jsonData.map(async data => {
+        const logData = new LogDataDto(data.pubDate, m.id, logType.id, data.articles.length);
+        const r = await this.logDataRepository.upsertLogData(logData);
+        return r;
+      }));
+      return res;
+    }));
+
+    return upDateData;
+  }
+
+  @Cron('0 0 */2 * * *')
+  public async collectNaverLog() {
+    const flatform = 'NAVER';
+    const member = await this.memberRepository.getMembersWithBlogs(flatform);
+    const logType = await this.dataLogTypeRepository.findOneLogType('ARTICLECNT');
+    const upDateData = await Promise.all(member.map(async m => {
+      this.naverCollector.author = m.blog.blogName;
+      await this.naverCollector.getBlogData();
+      await this.naverCollector.convertXml2Json();
+      this.naverCollector.serialize();
+      const res = await Promise.all(this.naverCollector.jsonData.map(async data => {
         const logData = new LogDataDto(data.pubDate, m.id, logType.id, data.articles.length);
         const r = await this.logDataRepository.upsertLogData(logData);
         return r;
