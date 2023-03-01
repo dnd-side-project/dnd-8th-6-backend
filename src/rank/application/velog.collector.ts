@@ -38,8 +38,22 @@ export class VelogCollector {
 
   convertDateFormat(date: string): Date|null {
     const dateObject: Date = new Date(date);
-    dateObject instanceof Date ? dateObject : null;
+    dateObject instanceof Date ? dateObject.setHours(0,0,0) : null;
     return dateObject;
+  }
+
+  serialize() {
+    this._jsonData = this._jsonData.reduce((acc, cur) => {
+      const {title, pubDate} = cur;
+      const pubDateOnly = pubDate.toISOString().substring(0, 10);
+      const existingData = acc.find(({pubDate}) => pubDate === pubDateOnly);
+      if (existingData) {
+        existingData.articles.push(title);
+      } else {
+        acc.push({pubDate: pubDateOnly, articles: [title]});
+      }
+      return acc;
+    }, []);
   }
 
   set author(author:string) {

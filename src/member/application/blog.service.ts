@@ -7,7 +7,7 @@ import { BlogResponseDto } from '../presentation/dto/blog-response.dto';
 import { Member } from '../domain/member.entity';
 import { BlogStatDto } from './dto/blog-stat.dto';
 import { LogDataRepository } from '../../rank/repository/log-data.repository';
-import { DataLogTypeRepository } from '../../rank/repository/commit-log.repository';
+import { DataLogTypeRepository } from '../../rank/repository/data-log-type.repository';
 import { LogType } from '../../rank/domain/log-type.enum';
 import { DataLogType } from '../../rank/domain/log-type.entity';
 

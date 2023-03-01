@@ -11,7 +11,7 @@ import { GithubClient } from './application/github.client';
 import { HttpModule } from '@nestjs/axios';
 import { Crawler } from './application/crawler';
 import { LogDataRepository } from '../rank/repository/log-data.repository';
-import { DataLogTypeRepository } from '../rank/repository/commit-log.repository';
+import { DataLogTypeRepository } from '../rank/repository/data-log-type.repository';
 
 @Module({
   imports: [

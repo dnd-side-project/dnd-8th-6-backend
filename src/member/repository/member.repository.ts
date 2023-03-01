@@ -1,9 +1,11 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Member } from '../domain/member.entity';
 import { BadRequestException } from '@nestjs/common';
+import { Blog } from '../domain/blog.entity';
 
 @EntityRepository(Member)
 export class MemberRepository extends Repository<Member> {
+
   public async findOneOrThrow(id: number, options?) {
     let member;
 
@@ -19,6 +21,7 @@ export class MemberRepository extends Repository<Member> {
 
     return member;
   }
+
   public async getMemberListByNameOrGithubIdLike(
     name: string,
   ): Promise<Member[]> {
@@ -27,5 +30,13 @@ export class MemberRepository extends Repository<Member> {
       .orWhere('member.githubId LIKE :name', { name: `%${name}%` })
       .orderBy('member.name', 'ASC')
       .getMany();
+  }
+
+  public async getMembersWithBlogs(platformType: string) {
+    const members = await this.createQueryBuilder('member')
+    .innerJoinAndSelect('member.blog', 'blog', 'blog.platformType = :platformType', { platformType: platformType })
+    .select(['member.id', 'member.name', 'blog.id', 'blog.blogName'])
+    .getMany();
+    return members;
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MemberRepository } from '../../member/repository/member.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogDataRepository } from '../repository/log-data.repository';
-import { DataLogTypeRepository } from '../repository/commit-log.repository';
+import { DataLogTypeRepository } from '../repository/data-log-type.repository';
 import { Crawler } from '../../member/application/crawler';
 import { LogType } from '../domain/log-type.enum';
 import { LogData } from '../domain/log-data.entity';
@@ -11,6 +11,7 @@ import { GithubContribution } from '../../member/application/dto/github-contribu
 import { Member } from '../../member/domain/member.entity';
 import { VelogCollector } from './velog.collector';
 import { NaverCollector } from './naver.collector';
+import { LogDataDto } from './dto/LogData.dto';
 
 
 @Injectable()
@@ -30,14 +31,26 @@ export class LogDataCronService {
     
   ) {}
 
-  // public async collectVelogLog() {
-  //   const member = await this.memberRepository.findOneOrFail({id: 9});
+  @Cron('0 0 */2 * * *')
+  public async collectVelogLog() {
+    const flatform = 'VELOG';
+    const member = await this.memberRepository.getMembersWithBlogs(flatform);
+    const logType = await this.dataLogTypeRepository.findOneLogType('ARTICLECNT');
+    const upDateData = await Promise.all(member.map(async m => {
+      this.velogCollector.author = m.blog.blogName;
+      await this.velogCollector.getBlogData();
+      await this.velogCollector.convertXml2Json();
+      this.velogCollector.serialize();
+      const res = await Promise.all(this.velogCollector.jsonData.map(async data => {
+        const logData = new LogDataDto(data.pubDate, m.id, logType.id, data.articles.length);
+        const r = await this.logDataRepository.upsertLogData(logData);
+        return r;
+      }));
+      return res;
+    }));
 
-  //   this.velogCollector.author = author;
-  //   await this.velogCollector.getBlogData();
-  //   await this.velogCollector.convertXml2Json();
-  //   return this.velogCollector.jsonData;
-  // }
+    return upDateData;
+  }
 
 
   @Cron('0 0 */2 * * *')
@@ -88,7 +101,7 @@ export class LogDataCronService {
         const logData = await this.logDataRepository.create({
           dataLog: Number.parseInt(contribution.contribution),
           logDate: contribution.date,
-          memberId: String(member.id),
+          memberId: member.id,
           logType: dataLogType,
         });
         await this.logDataRepository.save(logData);
@@ -152,7 +165,7 @@ export class LogDataCronService {
       const logData = await this.logDataRepository.create({
         dataLog: consecutiveDays,
         logDate: logs[0].logDate,
-        memberId: String(member.id),
+        memberId: member.id,
         logType: dataLogType,
       });
 

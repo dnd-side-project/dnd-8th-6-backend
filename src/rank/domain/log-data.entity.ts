@@ -15,7 +15,7 @@ export class LogData extends BaseEntity {
   logDate!: Date;
 
   @PrimaryColumn({ name: 'member_id' })
-  memberId: string;
+  memberId: number;
 
   @PrimaryColumn({ name: 'log_type_id' })
   logTypeId: number;
