@@ -9,6 +9,9 @@ import { LogData } from '../domain/log-data.entity';
 import { Cron } from '@nestjs/schedule';
 import { GithubContribution } from '../../member/application/dto/github-contribution-response.dto';
 import { Member } from '../../member/domain/member.entity';
+import { VelogCollector } from './velog.collector';
+import { NaverCollector } from './naver.collector';
+
 
 @Injectable()
 export class LogDataCronService {
@@ -22,7 +25,20 @@ export class LogDataCronService {
     @InjectRepository(DataLogTypeRepository)
     private readonly dataLogTypeRepository: DataLogTypeRepository,
     private readonly crawler: Crawler,
+    private readonly velogCollector: VelogCollector,
+    private readonly naverCollector: NaverCollector,
+    
   ) {}
+
+  // public async collectVelogLog() {
+  //   const member = await this.memberRepository.findOneOrFail({id: 9});
+
+  //   this.velogCollector.author = author;
+  //   await this.velogCollector.getBlogData();
+  //   await this.velogCollector.convertXml2Json();
+  //   return this.velogCollector.jsonData;
+  // }
+
 
   @Cron('0 0 */2 * * *')
   public async crawlGithubAndSaveOnRepository() {
@@ -73,7 +89,7 @@ export class LogDataCronService {
           dataLog: Number.parseInt(contribution.contribution),
           logDate: contribution.date,
           memberId: String(member.id),
-          logTypeId: dataLogType,
+          logType: dataLogType,
         });
         await this.logDataRepository.save(logData);
       }
@@ -137,7 +153,7 @@ export class LogDataCronService {
         dataLog: consecutiveDays,
         logDate: logs[0].logDate,
         memberId: String(member.id),
-        logTypeId: dataLogType,
+        logType: dataLogType,
       });
 
       await this.logDataRepository.save(logData);
