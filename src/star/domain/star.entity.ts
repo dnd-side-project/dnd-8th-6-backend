@@ -1,5 +1,11 @@
-import { Member } from 'src/member/domain/member.entity';
-import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Member } from '../../member/domain/member.entity';
 
 @Entity()
 export class Star extends BaseEntity {
@@ -19,5 +25,4 @@ export class Star extends BaseEntity {
   })
   @JoinColumn({ name: 'following_id' })
   followingId!: Member;
-
 }

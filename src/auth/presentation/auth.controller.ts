@@ -5,8 +5,10 @@ import { TokenResponseDto } from './dto/token-response.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetMember } from './get-member.decorator';
 import { Member } from '../../member/domain/member.entity';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('auth')
+@ApiTags('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

@@ -1,9 +1,16 @@
-import { Blog } from 'src/blog/domain/blog.entity';
-import { LogData } from 'src/log-data/domain/log-data.entity';
-import { Profile } from 'src/profile/domain/profile.entity';
-import { Star } from 'src/star/domain/star.entity';
-import { BaseEntity, Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { SocialType } from './social-type.enum';
+import { LogData } from '../../rank/domain/log-data.entity';
+import { Star } from '../../star/domain/star.entity';
+import { Profile } from './profile.entity';
+import { Blog } from './blog.entity';
 
 @Entity()
 export class Member extends BaseEntity {
@@ -13,16 +20,26 @@ export class Member extends BaseEntity {
   @Column({ type: 'varchar', name: 'name', nullable: false, length: 20 })
   name!: string;
 
-  @Column({ type: 'enum', name: 'social_type', nullable: false, enum: SocialType})
+  @Column({
+    type: 'enum',
+    name: 'social_type',
+    nullable: false,
+    enum: SocialType,
+  })
   socialType!: SocialType;
 
   @Column({ type: 'varchar', name: 'social_id', nullable: false, length: 32 })
   socialId!: string;
 
-  @Column({ type: 'varchar', name: 'profile_image_url', nullable: true, length: 2084 })
+  @Column({
+    type: 'varchar',
+    name: 'profile_image_url',
+    nullable: true,
+    length: 2084,
+  })
   profileImageUrl: string;
 
-  @Column({ type: 'varchar', name: 'github_id',  nullable: true, unique: true })
+  @Column({ type: 'varchar', name: 'github_id', nullable: true, unique: true })
   githubId: string;
 
   @Column({
@@ -30,8 +47,7 @@ export class Member extends BaseEntity {
   })
   refreshToken: string;
 
-
-  @OneToMany(() => LogData, (logData) => logData.MemberId)
+  @OneToMany(() => LogData, (logData) => logData.memberId)
   logData!: LogData[];
 
   @OneToMany(() => Star, (star) => star.memberId)
@@ -39,7 +55,7 @@ export class Member extends BaseEntity {
 
   @OneToMany(() => Star, (star) => star.followingId)
   follow!: Star[];
-  
+
   @OneToOne(() => Profile, (profile) => profile.member)
   profile: Profile;
 
