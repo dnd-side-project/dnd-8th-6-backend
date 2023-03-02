@@ -38,7 +38,7 @@ export class StarService {
     );
   }
 
-  public async followMember(
+  public async followToggle(
     member: Member,
     followTargetId: number,
   ): Promise<StarResponseDto> {
@@ -56,43 +56,19 @@ export class StarService {
     });
 
     if (star) {
-      throw new BadRequestException('이미 팔로우된 사용자입니다.');
+      await this.starRepository.delete(star);
+      return this.getStarList(member.id);
     }
-
-    const newStar = await this.starRepository.create({
-      memberId: member,
-      followingId: targetMember,
-    });
-
-    await this.starRepository.save(newStar);
-
-    return this.getStarList(member.id);
-  }
-
-  public async unfollowMember(
-    member: Member,
-    unfollowTargetId: number,
-  ): Promise<StarResponseDto> {
-    this.validateFollowInfo(member, unfollowTargetId);
-
-    const targetMember = await this.memberRepository.findOneOrThrow(
-      unfollowTargetId,
-    );
-
-    const star = await this.starRepository.findOne({
-      where: {
+    if (!star) {
+      const newStar = await this.starRepository.create({
         memberId: member,
         followingId: targetMember,
-      },
-    });
+      });
 
-    if (!star) {
-      throw new BadRequestException('팔로우 하지 않은 사용자입니다.');
+      await this.starRepository.save(newStar);
+
+      return this.getStarList(member.id);
     }
-
-    await this.starRepository.delete(star);
-
-    return this.getStarList(member.id);
   }
 
   private validateFollowInfo(member: Member, followTargetId: number) {

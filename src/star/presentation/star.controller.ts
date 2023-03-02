@@ -1,10 +1,9 @@
 import {
   Controller,
-  Delete,
   Get,
   Param,
   ParseIntPipe,
-  Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { StarService } from '../application/star.service';
@@ -27,21 +26,11 @@ export class StarController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
-  @Post('/:memberId')
-  public async followMember(
+  @Put('/:memberId')
+  public async followToggle(
     @GetMember() member: Member,
     @Param('memberId', ParseIntPipe) memberId: number,
   ) {
-    return await this.starService.followMember(member, memberId);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
-  @Delete('/:memberId')
-  public async unfollowMember(
-    @GetMember() member: Member,
-    @Param('memberId', ParseIntPipe) memberId: number,
-  ) {
-    return await this.starService.unfollowMember(member, memberId);
+    return await this.starService.followToggle(member, memberId);
   }
 }
