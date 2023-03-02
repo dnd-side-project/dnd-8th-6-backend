@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { MemberService } from '../application/member.service';
 import { MemberResponseDto } from './dto/member-response.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -27,6 +28,7 @@ import { GithubInfoResponseDto } from '../application/dto/github-info-response.d
 import { GithubContribution } from '../application/dto/github-contribution-response.dto';
 
 @Controller('member')
+@ApiTags('Member')
 export class MemberController {
   constructor(
     private readonly memberService: MemberService,
@@ -34,6 +36,7 @@ export class MemberController {
     private readonly blogService: BlogService,
   ) {}
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id')
   async getMemberById(
@@ -42,6 +45,7 @@ export class MemberController {
     return await this.memberService.getMemberById(id);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/github')
   async getGithubInfoById(
@@ -50,6 +54,7 @@ export class MemberController {
     return await this.memberService.getGithubInfoById(id);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/github/contribution')
   async getGithubContributionById(
@@ -58,6 +63,7 @@ export class MemberController {
     return await this.memberService.getGithubContributionById(id);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('')
   async getMemberList(
@@ -66,6 +72,7 @@ export class MemberController {
     return await this.memberService.getMemberList(name);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Put('/:id')
   async updateMember(
@@ -79,6 +86,7 @@ export class MemberController {
     return await this.memberService.updateMember(id, updateMemberRequestDto);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:id')
   async deleteMember(
@@ -99,6 +107,7 @@ export class MemberController {
     return await this.profileService.getProfile(id);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Put('/:id/profile')
   async updateMemberProfile(
@@ -112,6 +121,7 @@ export class MemberController {
     return await this.profileService.updateProfile(id, updateProfileRequestDto);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/blog')
   async getBlogInfo(
@@ -120,6 +130,7 @@ export class MemberController {
     return await this.blogService.getBlogInfo(id);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Post('/:id/blog')
   async createBlogInfo(
@@ -133,6 +144,7 @@ export class MemberController {
     return await this.blogService.createBlogInfo(id, blogRequestDto);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Put('/:id/blog')
   async updateBlogInfo(
@@ -146,6 +158,7 @@ export class MemberController {
     return await this.blogService.updateBlogInfo(id, blogRequestDto);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:id/blog')
   async deleteBlogInfo(

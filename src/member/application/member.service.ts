@@ -9,7 +9,6 @@ import { MemberResponseDto } from '../presentation/dto/member-response.dto';
 import { UpdateMemberRequestDto } from '../presentation/dto/update-member-request.dto';
 import { GithubClient } from './github.client';
 import { GithubInfoResponseDto } from './dto/github-info-response.dto';
-import puppeteer from 'puppeteer';
 import { GithubContribution } from './dto/github-contribution-response.dto';
 import { Crawler } from './crawler';
 

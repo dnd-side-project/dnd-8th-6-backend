@@ -17,9 +17,6 @@ export class Blog extends BaseEntity {
   @Column({ type: 'int', name: 'article_cnt', default: 0 })
   articleCnt!: number;
 
-  // @Column({ type: 'int', name: 'visitor_cnt', default: 0 })
-  // visitorCnt!: number;
-
   @Column({
     type: 'enum',
     name: 'platform_type',

@@ -2,13 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MemberRepository } from '../../member/repository/member.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogDataRepository } from '../repository/log-data.repository';
-import { DataLogTypeRepository } from '../repository/commit-log.repository';
+import { DataLogTypeRepository } from '../repository/data-log-type.repository';
 import { Crawler } from '../../member/application/crawler';
 import { LogType } from '../domain/log-type.enum';
 import { LogData } from '../domain/log-data.entity';
 import { Cron } from '@nestjs/schedule';
 import { GithubContribution } from '../../member/application/dto/github-contribution-response.dto';
 import { Member } from '../../member/domain/member.entity';
+import { VelogCollector } from './velog.collector';
+import { NaverCollector } from './naver.collector';
+import { LogDataDto } from './dto/log-data.dto';
+
 
 @Injectable()
 export class LogDataCronService {
@@ -22,7 +26,54 @@ export class LogDataCronService {
     @InjectRepository(DataLogTypeRepository)
     private readonly dataLogTypeRepository: DataLogTypeRepository,
     private readonly crawler: Crawler,
+    private readonly velogCollector: VelogCollector,
+    private readonly naverCollector: NaverCollector,
+    
   ) {}
+
+  @Cron('0 10 */2 * * *')
+  public async collectVelogLog() {
+    const flatform = 'VELOG';
+    const member = await this.memberRepository.getMembersWithBlogs(flatform);
+    const logType = await this.dataLogTypeRepository.findOneLogType('ARTICLECNT');
+    const upDateData = await Promise.all(member.map(async m => {
+      this.velogCollector.author = m.blog.blogName;
+      await this.velogCollector.getBlogData();
+      await this.velogCollector.convertXml2Json();
+      this.velogCollector.serialize();
+      const res = await Promise.all(this.velogCollector.jsonData.map(async data => {
+        const logData = new LogDataDto(data.pubDate, m.id, logType.id, data.articles.length);
+        const r = await this.logDataRepository.upsertLogData(logData);
+        return r;
+      }));
+      return res;
+    }));
+
+    return upDateData;
+  }
+
+  @Cron('0 20 */2 * * *')
+  public async collectNaverLog() {
+    console.log('batvch');
+    const flatform = 'NAVER';
+    const member = await this.memberRepository.getMembersWithBlogs(flatform);
+    const logType = await this.dataLogTypeRepository.findOneLogType('ARTICLECNT');
+    const upDateData = await Promise.all(member.map(async m => {
+      this.naverCollector.author = m.blog.blogName;
+      await this.naverCollector.getBlogData();
+      await this.naverCollector.convertXml2Json();
+      this.naverCollector.serialize();
+      const res = await Promise.all(this.naverCollector.jsonData.map(async data => {
+        const logData = new LogDataDto(data.pubDate, m.id, logType.id, data.articles.length);
+        const r = await this.logDataRepository.upsertLogData(logData);
+        return r;
+      }));
+      return res;
+    }));
+
+    return upDateData;
+  }
+
 
   @Cron('0 0 */2 * * *')
   public async crawlGithubAndSaveOnRepository() {
@@ -72,8 +123,8 @@ export class LogDataCronService {
         const logData = await this.logDataRepository.create({
           dataLog: Number.parseInt(contribution.contribution),
           logDate: contribution.date,
-          memberId: String(member.id),
-          logTypeId: dataLogType,
+          memberId: member.id,
+          logType: dataLogType,
         });
         await this.logDataRepository.save(logData);
       }
@@ -136,8 +187,8 @@ export class LogDataCronService {
       const logData = await this.logDataRepository.create({
         dataLog: consecutiveDays,
         logDate: logs[0].logDate,
-        memberId: String(member.id),
-        logTypeId: dataLogType,
+        memberId: member.id,
+        logType: dataLogType,
       });
 
       await this.logDataRepository.save(logData);
