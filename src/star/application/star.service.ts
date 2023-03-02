@@ -59,16 +59,15 @@ export class StarService {
       await this.starRepository.delete(star);
       return this.getStarList(member.id);
     }
-    if (!star) {
-      const newStar = await this.starRepository.create({
-        memberId: member,
-        followingId: targetMember,
-      });
 
-      await this.starRepository.save(newStar);
+    const newStar = await this.starRepository.create({
+      memberId: member,
+      followingId: targetMember,
+    });
 
-      return this.getStarList(member.id);
-    }
+    await this.starRepository.save(newStar);
+
+    return this.getStarList(member.id);
   }
 
   private validateFollowInfo(member: Member, followTargetId: number) {
