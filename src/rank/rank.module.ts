@@ -10,7 +10,7 @@ import { VelogCollector } from './application/velog.collector';
 import { NaverCollector } from './application/naver.collector';
 import { HttpModule } from '@nestjs/axios';
 import * as xml2js from 'xml2js';
-import { RankController } from './presentation/log-data.controller';
+import { RankController } from './presentation/rank.controller';
 
 @Module({
   controllers: [

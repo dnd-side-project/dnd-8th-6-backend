@@ -8,12 +8,10 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 import { MemberService } from '../application/member.service';
 import { MemberResponseDto } from './dto/member-response.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -42,12 +40,8 @@ export class MemberController {
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id')
   async getMemberById(
-    @Req() request: Request,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<MemberResponseDto> {
-    console.log(request.headers);
-    console.log('================');
-    console.log('');
     return await this.memberService.getMemberById(id);
   }
 
