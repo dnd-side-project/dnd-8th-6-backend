@@ -31,7 +31,7 @@ export class LogDataCronService {
     
   ) {}
 
-  @Cron('0 0 */2 * * *')
+  @Cron('0 10 */2 * * *')
   public async collectVelogLog() {
     const flatform = 'VELOG';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
@@ -52,7 +52,7 @@ export class LogDataCronService {
     return upDateData;
   }
 
-  @Cron('0 0 */2 * * *')
+  @Cron('0 20 */2 * * *')
   public async collectNaverLog() {
     console.log('batvch');
     const flatform = 'NAVER';
