@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
@@ -24,8 +25,8 @@ import { BlogService } from '../application/blog.service';
 import { BlogRequestDto } from './dto/blog-request.dto';
 import { BlogResponseDto } from './dto/blog-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
-import { GithubInfoResponseDto } from '../application/dto/github-info-response.dto';
 import { GithubContribution } from '../application/dto/github-contribution-response.dto';
+import { MemberGithubResponseDto } from './dto/member-github-response.dto';
 
 @Controller('member')
 @ApiTags('Member')
@@ -40,17 +41,25 @@ export class MemberController {
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id')
   async getMemberById(
+    @GetMember() member: Member,
     @Param('id', ParseIntPipe) id: number,
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
+    @Query(
+      'month',
+      new DefaultValuePipe(new Date().getMonth() + 1),
+      ParseIntPipe,
+    )
+    month: number,
   ): Promise<MemberResponseDto> {
-    return await this.memberService.getMemberById(id);
+    return await this.memberService.getMemberById(member, id, year, month);
   }
 
-  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/github')
   async getGithubInfoById(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<GithubInfoResponseDto> {
+  ): Promise<MemberGithubResponseDto> {
     return await this.memberService.getGithubInfoById(id);
   }
 
