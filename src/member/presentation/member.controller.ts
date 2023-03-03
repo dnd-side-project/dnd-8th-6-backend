@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
@@ -11,7 +12,13 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { MemberService } from '../application/member.service';
 import { MemberResponseDto } from './dto/member-response.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -24,8 +31,8 @@ import { BlogService } from '../application/blog.service';
 import { BlogRequestDto } from './dto/blog-request.dto';
 import { BlogResponseDto } from './dto/blog-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
-import { GithubInfoResponseDto } from '../application/dto/github-info-response.dto';
 import { GithubContribution } from '../application/dto/github-contribution-response.dto';
+import { MemberGithubResponseDto } from './dto/member-github-response.dto';
 
 @Controller('member')
 @ApiTags('Member')
@@ -36,21 +43,37 @@ export class MemberController {
     private readonly blogService: BlogService,
   ) {}
 
+  @ApiOperation({ summary: '사용자 조회', description: '사용자를 조회한다.' })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 정보',
+    type: MemberResponseDto,
+  })
+  @ApiQuery({ name: 'year', type: 'number', required: false })
+  @ApiQuery({ name: 'month', type: 'number', required: false })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id')
   async getMemberById(
+    @GetMember() member: Member,
     @Param('id', ParseIntPipe) id: number,
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
+    @Query(
+      'month',
+      new DefaultValuePipe(new Date().getMonth() + 1),
+      ParseIntPipe,
+    )
+    month: number,
   ): Promise<MemberResponseDto> {
-    return await this.memberService.getMemberById(id);
+    return await this.memberService.getMemberById(member, id, year, month);
   }
 
-  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/github')
   async getGithubInfoById(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<GithubInfoResponseDto> {
+  ): Promise<MemberGithubResponseDto> {
     return await this.memberService.getGithubInfoById(id);
   }
 
