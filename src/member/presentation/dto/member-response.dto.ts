@@ -11,12 +11,14 @@ export class MemberResponseDto {
   readonly profileImageUrl: string;
 
   readonly githubId: string;
+  readonly stared?: boolean;
 
-  constructor(member: Member) {
+  constructor(member: Member, stared?: boolean) {
     this.id = member.id;
     this.name = member.name;
     this.socialType = member.socialType;
     this.profileImageUrl = member.profileImageUrl;
     this.githubId = member.githubId;
+    this.stared = stared;
   }
 }

@@ -39,6 +39,15 @@ export class MemberService {
     id: number,
   ): Promise<MemberResponseDto> {
     const foundMember = await this.memberRepository.findOneOrThrow(id);
+    if (member.id !== foundMember.id) {
+      const star = await this.starRepository.findOne({
+        where: {
+          memberId: member,
+          followingId: foundMember,
+        },
+      });
+      return new MemberResponseDto(foundMember, star instanceof Star);
+    }
 
     return new MemberResponseDto(foundMember);
   }
