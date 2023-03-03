@@ -21,7 +21,7 @@ export class KakaoOauthClient implements OauthClient {
     const body = {
       grant_type: 'authorization_code',
       client_id: this.APP_KEY,
-      redirect_url: this.REDIRECT_URL,
+      redirect_uri: this.REDIRECT_URL,
       client_secret: this.CLIENT_SECRET,
       code: code,
     };
@@ -34,7 +34,6 @@ export class KakaoOauthClient implements OauthClient {
     const response = await firstValueFrom(
       this.httpService.post(this.REQUEST_TOKEN_URL, body, header),
     );
-
     return response.data.access_token;
   }
 
