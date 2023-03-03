@@ -43,7 +43,10 @@ export class MemberService {
   ): Promise<MemberResponseDto> {
     const foundMember = await this.memberRepository.findOneOrThrow(id);
 
-    const grade = await this.getGrade(foundMember, year, month);
+    const grades = await this.getGrade(foundMember, year, month);
+    const grade = grades.grade;
+    const score = Math.round(grades.score);
+    const exp = grades.exp === 100 ? 100 : Math.round(grades.exp * 100);
 
     if (requestedMember.id !== foundMember.id) {
       const star = await this.starRepository.findOne({
@@ -52,10 +55,16 @@ export class MemberService {
           followingId: foundMember,
         },
       });
-      return new MemberResponseDto(foundMember, star instanceof Star, grade);
+      return new MemberResponseDto(
+        foundMember,
+        star instanceof Star,
+        grade,
+        score,
+        exp,
+      );
     }
 
-    return new MemberResponseDto(foundMember, null, grade);
+    return new MemberResponseDto(foundMember, null, grade, score, exp);
   }
 
   private async getGrade(member: Member, year: number, month: number) {
@@ -78,15 +87,18 @@ export class MemberService {
     const score = commitScore + consecutiveScore + blogScore;
 
     if (score >= 60) {
-      return MemberGrade.MASTER;
+      return { grade: MemberGrade.MASTER, score: score, exp: 100 };
     }
     if (score >= 40) {
-      return MemberGrade.DIAMOND;
+      const exp = (score - 40) / 20;
+      return { grade: MemberGrade.DIAMOND, score: score, exp: exp };
     }
     if (score >= 20) {
-      return MemberGrade.PLATINUM;
+      const exp = (score - 20) / 20;
+      return { grade: MemberGrade.PLATINUM, score: score, exp: exp };
     }
-    return MemberGrade.GOLD;
+    const exp = score / 20;
+    return { grade: MemberGrade.GOLD, score: score, exp: exp };
   }
 
   private async getCommitScore(

@@ -22,8 +22,18 @@ export class MemberResponseDto {
   readonly stared?: boolean;
   @ApiProperty()
   readonly grade?: MemberGrade;
+  @ApiProperty()
+  readonly score?: number;
+  @ApiProperty()
+  readonly exp?: number;
 
-  constructor(member: Member, stared?: boolean, grade?: MemberGrade) {
+  constructor(
+    member: Member,
+    stared?: boolean,
+    grade?: MemberGrade,
+    score?: number,
+    exp?: number,
+  ) {
     this.id = member.id;
     this.name = member.name;
     this.socialType = member.socialType;
@@ -31,5 +41,7 @@ export class MemberResponseDto {
     this.githubId = member.githubId;
     this.stared = stared;
     this.grade = grade;
+    this.score = score;
+    this.exp = exp;
   }
 }
