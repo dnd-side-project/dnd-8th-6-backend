@@ -43,6 +43,39 @@ export class MemberController {
     private readonly blogService: BlogService,
   ) {}
 
+  @ApiOperation({
+    summary: '본인 정보 조회',
+    description: '사용자 본인의 정보를 조회한다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 정보',
+    type: MemberResponseDto,
+  })
+  @ApiQuery({ name: 'year', type: 'number', required: false })
+  @ApiQuery({ name: 'month', type: 'number', required: false })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/me')
+  async getMemberByAccessToken(
+    @GetMember() member: Member,
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
+    @Query(
+      'month',
+      new DefaultValuePipe(new Date().getMonth() + 1),
+      ParseIntPipe,
+    )
+    month: number,
+  ): Promise<MemberResponseDto> {
+    return await this.memberService.getMemberById(
+      member,
+      member.id,
+      year,
+      month,
+    );
+  }
+
   @ApiOperation({ summary: '사용자 조회', description: '사용자를 조회한다.' })
   @ApiResponse({
     status: 200,
