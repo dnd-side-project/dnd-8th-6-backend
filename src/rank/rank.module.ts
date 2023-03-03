@@ -11,6 +11,7 @@ import { NaverCollector } from './application/naver.collector';
 import { HttpModule } from '@nestjs/axios';
 import * as xml2js from 'xml2js';
 import { RankController } from './presentation/rank.controller';
+import { LogDataService } from './application/log-data.service';
 
 @Module({
   controllers: [
@@ -19,6 +20,7 @@ import { RankController } from './presentation/rank.controller';
   providers: [
     Crawler, 
     LogDataCronService,
+    LogDataService,
     xml2js.Parser,
     VelogCollector,
     NaverCollector
