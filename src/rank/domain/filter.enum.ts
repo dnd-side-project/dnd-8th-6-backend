@@ -1,5 +1,5 @@
-export enum LogType {
+export enum Filter {
   STAR = 'STAR',
   COMMIT = 'COMMIT',
-  CONSTANTCOMMIT = 'CONSTANTCOMMIT',
+  COMMITDATE = 'COMMITDATE',
 }

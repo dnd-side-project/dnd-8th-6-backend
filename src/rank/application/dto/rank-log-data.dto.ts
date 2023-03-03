@@ -1,18 +1,13 @@
-import { IsEnum, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
-import { LogType } from 'src/rank/domain/log-type.enum';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsInt, IsNumberString, IsString } from 'class-validator';
+import { Filter } from 'src/rank/domain/filter.enum';
 
-export class LogDataDto {
+export class RankDataDto {
   @IsString()
-  @IsEnum(LogType)
-  filter: string;
-
-  @IsNumber()
-  page: number;
-
-  @IsNumber()
-  logTypeId: number;
+  @IsEnum(Filter)
+  filter: Filter;
 
   @IsInt()
-  @IsOptional()
-  dataLog?: number;
+  @Transform(({ value }) => parseInt(value))
+  page: number;
 }
