@@ -1,0 +1,5 @@
+export enum LogType {
+  STAR = 'STAR',
+  COMMIT = 'COMMIT',
+  CONSTANTCOMMIT = 'CONSTANTCOMMIT',
+}
