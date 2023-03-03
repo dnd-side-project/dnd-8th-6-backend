@@ -12,7 +12,13 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { MemberService } from '../application/member.service';
 import { MemberResponseDto } from './dto/member-response.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -37,6 +43,14 @@ export class MemberController {
     private readonly blogService: BlogService,
   ) {}
 
+  @ApiOperation({ summary: '사용자 조회', description: '사용자를 조회한다.' })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 정보',
+    type: MemberResponseDto,
+  })
+  @ApiQuery({ name: 'year', type: 'number', required: false })
+  @ApiQuery({ name: 'month', type: 'number', required: false })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id')
