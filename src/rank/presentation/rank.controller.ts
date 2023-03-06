@@ -11,8 +11,8 @@ import { LogDataService } from '../application/log-data.service';
 export class RankController {
   constructor(private readonly logDataService: LogDataService) {}
 
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
+  // @ApiBearerAuth('access-token')
+  // @UseGuards(AuthGuard('jwt'))
   @Get('')
   @UsePipes(new ValidationPipe())
   public async followToggle(

@@ -11,7 +11,7 @@ export class LogDataService {
     private readonly logDataRepository: LogDataRepository,
   ) {}
 
-  public async getRank(rankDataDto: RankDataDto): Promise<any> {
+  public async getRank(rankDataDto: RankDataDto) {
     const rankData = await this.logDataRepository.getRankByLogData(rankDataDto);
     return rankData;
   }
