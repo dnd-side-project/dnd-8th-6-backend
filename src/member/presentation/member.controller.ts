@@ -44,8 +44,7 @@ export class MemberController {
   ) {}
 
   @ApiOperation({
-    summary: '본인 정보 조회',
-    description: '사용자 본인의 정보를 조회한다.',
+    summary: '요청자 정보 조회',
   })
   @ApiResponse({
     status: 200,
@@ -76,10 +75,11 @@ export class MemberController {
     );
   }
 
-  @ApiOperation({ summary: '사용자 조회', description: '사용자를 조회한다.' })
+  @ApiOperation({ summary: '사용자 조회' })
   @ApiResponse({
     status: 200,
-    description: '사용자 정보',
+    description:
+      '사용자 정보를 조회합니다. year, month 값에 해당하는 기간의 등급을 반환합니다. 미입력시 기본 값은 현재 연도와 현재 월 입니다.',
     type: MemberResponseDto,
   })
   @ApiQuery({ name: 'year', type: 'number', required: false })
@@ -102,6 +102,14 @@ export class MemberController {
     return await this.memberService.getMemberById(member, id, year, month);
   }
 
+  @ApiOperation({
+    summary: '사용자 github 정보 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 github 정보',
+    type: MemberGithubResponseDto,
+  })
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/github')
   async getGithubInfoById(
@@ -110,6 +118,15 @@ export class MemberController {
     return await this.memberService.getGithubInfoById(id);
   }
 
+  @ApiOperation({
+    summary: '사용자 github contributions 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 github contribution 리스트',
+    type: GithubContribution,
+    isArray: true,
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/github/contribution')
@@ -119,15 +136,35 @@ export class MemberController {
     return await this.memberService.getGithubContributionById(id);
   }
 
+  @ApiOperation({
+    summary: '사용자 리스트 조회',
+    description:
+      '사용자의 리스트를 조회합니다. 이름 또는 github 닉네임으로 검색할 수 있습니다. 페이징 적용 예정입니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 리스트',
+    type: MemberGithubResponseDto,
+    isArray: true,
+  })
+  @ApiQuery({ name: 'name', type: 'string', required: false })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('')
   async getMemberList(
-    @Query('name') name: string,
+    @Query('name', new DefaultValuePipe('')) name: string,
   ): Promise<MemberResponseDto[]> {
     return await this.memberService.getMemberList(name);
   }
 
+  @ApiOperation({
+    summary: '사용자 정보 수정',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 정보',
+    type: MemberResponseDto,
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Put('/:id')
@@ -142,6 +179,15 @@ export class MemberController {
     return await this.memberService.updateMember(id, updateMemberRequestDto);
   }
 
+  @ApiOperation({
+    summary: '사용자 정보 삭제',
+    description:
+      '사용자의 정보를 삭제합니다. 정상적으로 실행되면 HttpStatusCode 200을 반환합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '',
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:id')
@@ -156,6 +202,14 @@ export class MemberController {
     return await this.memberService.deleteMember(id, refreshToken);
   }
 
+  @ApiOperation({
+    summary: '사용자 프로필 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 프로필 정보',
+    type: ProfileResponseDto,
+  })
   @Get('/:id/profile')
   async getMemberProfile(
     @Param('id', ParseIntPipe) id: number,
@@ -163,6 +217,14 @@ export class MemberController {
     return await this.profileService.getProfile(id);
   }
 
+  @ApiOperation({
+    summary: '사용자 프로필 수정',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 프로필 정보',
+    type: ProfileResponseDto,
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Put('/:id/profile')
@@ -177,6 +239,14 @@ export class MemberController {
     return await this.profileService.updateProfile(id, updateProfileRequestDto);
   }
 
+  @ApiOperation({
+    summary: '사용자 블로그 정보 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 블로그 정보',
+    type: BlogResponseDto,
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/blog')
@@ -186,6 +256,14 @@ export class MemberController {
     return await this.blogService.getBlogInfo(id);
   }
 
+  @ApiOperation({
+    summary: '사용자 블로그 정보 등록',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 블로그 정보',
+    type: BlogResponseDto,
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Post('/:id/blog')
@@ -200,6 +278,14 @@ export class MemberController {
     return await this.blogService.createBlogInfo(id, blogRequestDto);
   }
 
+  @ApiOperation({
+    summary: '사용자 블로그 정보 수정',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 블로그 정보',
+    type: BlogResponseDto,
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Put('/:id/blog')
@@ -214,6 +300,11 @@ export class MemberController {
     return await this.blogService.updateBlogInfo(id, blogRequestDto);
   }
 
+  @ApiOperation({
+    summary: '사용자 블로그 정보 삭제',
+    description:
+      '사용자 블로그 등록 정보를 삭제합니다. 성공시 HttpStatusCode 200을 반환합니다.',
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Delete('/:id/blog')
