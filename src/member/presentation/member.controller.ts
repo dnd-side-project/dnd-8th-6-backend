@@ -148,13 +148,27 @@ export class MemberController {
     isArray: true,
   })
   @ApiQuery({ name: 'name', type: 'string', required: false })
+  @ApiQuery({
+    name: 'size',
+    type: 'number',
+    required: false,
+    description: 'default 1',
+  })
+  @ApiQuery({
+    name: 'page',
+    type: 'page',
+    required: false,
+    description: 'default 10',
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('')
   async getMemberList(
     @Query('name', new DefaultValuePipe('')) name: string,
+    @Query('size', new DefaultValuePipe(10), ParseIntPipe) size: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
   ): Promise<MemberResponseDto[]> {
-    return await this.memberService.getMemberList(name);
+    return await this.memberService.getMemberList(name, size, page);
   }
 
   @ApiOperation({

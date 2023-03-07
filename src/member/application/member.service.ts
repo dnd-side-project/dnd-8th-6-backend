@@ -258,11 +258,17 @@ export class MemberService {
     return consecutiveLogData !== null ? consecutiveLogData.dataLog : 0;
   }
 
-  public async getMemberList(name: string): Promise<MemberResponseDto[]> {
-    if (!name) name = '';
-
+  public async getMemberList(
+    name: string,
+    size: number,
+    page: number,
+  ): Promise<MemberResponseDto[]> {
     const members =
-      await this.memberRepository.getMemberListByNameOrGithubIdLike(name);
+      await this.memberRepository.getMemberListByNameOrGithubIdLike(
+        name,
+        size,
+        page,
+      );
 
     return members.map((member) => new MemberResponseDto(member));
   }

@@ -4,7 +4,6 @@ import { BadRequestException } from '@nestjs/common';
 
 @EntityRepository(Member)
 export class MemberRepository extends Repository<Member> {
-
   public async findOneOrThrow(id: number, options?) {
     let member;
 
@@ -23,19 +22,28 @@ export class MemberRepository extends Repository<Member> {
 
   public async getMemberListByNameOrGithubIdLike(
     name: string,
+    size: number,
+    page: number,
   ): Promise<Member[]> {
     return await this.createQueryBuilder('member')
       .where('member.name LIKE :name', { name: `%${name}%` })
       .orWhere('member.githubId LIKE :name', { name: `%${name}%` })
       .orderBy('member.name', 'ASC')
+      .skip(size * (page - 1))
+      .take(size)
       .getMany();
   }
 
   public async getMembersWithBlogs(platformType: string) {
     const members = await this.createQueryBuilder('member')
-    .innerJoinAndSelect('member.blog', 'blog', 'blog.platformType = :platformType', { platformType: platformType })
-    .select(['member.id', 'member.name', 'blog.id', 'blog.blogName'])
-    .getMany();
+      .innerJoinAndSelect(
+        'member.blog',
+        'blog',
+        'blog.platformType = :platformType',
+        { platformType: platformType },
+      )
+      .select(['member.id', 'member.name', 'blog.id', 'blog.blogName'])
+      .getMany();
     return members;
   }
 }
