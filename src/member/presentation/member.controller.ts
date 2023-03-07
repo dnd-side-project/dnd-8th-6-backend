@@ -139,7 +139,7 @@ export class MemberController {
   @ApiOperation({
     summary: '사용자 리스트 조회',
     description:
-      '사용자의 리스트를 조회합니다. 이름 또는 github 닉네임으로 검색할 수 있습니다. 페이징 적용 예정입니다.',
+      '사용자의 리스트를 조회합니다. 이름 또는 github 닉네임으로 검색할 수 있습니다. offset 방식의 페이징 방식이 적용되어 있습니다.',
   })
   @ApiResponse({
     status: 200,
@@ -152,13 +152,13 @@ export class MemberController {
     name: 'size',
     type: 'number',
     required: false,
-    description: 'default 1',
+    description: 'default 10',
   })
   @ApiQuery({
     name: 'page',
     type: 'page',
     required: false,
-    description: 'default 10',
+    description: 'default 1',
   })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
