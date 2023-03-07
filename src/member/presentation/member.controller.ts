@@ -110,6 +110,7 @@ export class MemberController {
     description: '사용자 github 정보',
     type: MemberGithubResponseDto,
   })
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:id/github')
   async getGithubInfoById(
@@ -224,6 +225,8 @@ export class MemberController {
     description: '사용자 프로필 정보',
     type: ProfileResponseDto,
   })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @Get('/:id/profile')
   async getMemberProfile(
     @Param('id', ParseIntPipe) id: number,
