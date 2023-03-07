@@ -33,6 +33,7 @@ import { BlogResponseDto } from './dto/blog-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
 import { GithubContribution } from '../application/dto/github-contribution-response.dto';
 import { MemberGithubResponseDto } from './dto/member-github-response.dto';
+import { MemberSummaryResponseDto } from './dto/member-summary-response.dto';
 
 @Controller('member')
 @ApiTags('Member')
@@ -42,6 +43,33 @@ export class MemberController {
     private readonly profileService: ProfileService,
     private readonly blogService: BlogService,
   ) {}
+
+  @ApiOperation({
+    summary: '사용자 요약 정보 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 요약 정보',
+    type: MemberSummaryResponseDto,
+  })
+  @ApiQuery({ name: 'year', type: 'number', required: false })
+  @ApiQuery({ name: 'month', type: 'number', required: false })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/summary/:id')
+  async getMemberSummary(
+    @Param('id', ParseIntPipe) memberId: number,
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
+    @Query(
+      'month',
+      new DefaultValuePipe(new Date().getMonth() + 1),
+      ParseIntPipe,
+    )
+    month: number,
+  ): Promise<MemberSummaryResponseDto> {
+    return await this.memberService.getMemberSummary(memberId, year, month);
+  }
 
   @ApiOperation({
     summary: '요청자 정보 조회',
