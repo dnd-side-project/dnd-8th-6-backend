@@ -3,13 +3,13 @@ import {
   Controller,
   DefaultValuePipe,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   ParseIntPipe,
   Post,
   Put,
   Query,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -188,7 +188,7 @@ export class MemberController {
     @Body() updateMemberRequestDto: UpdateMemberRequestDto,
   ): Promise<MemberResponseDto> {
     if (member.id !== id) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return await this.memberService.updateMember(id, updateMemberRequestDto);
   }
@@ -211,7 +211,7 @@ export class MemberController {
     @Body('refreshToken') refreshToken: string,
   ): Promise<void> {
     if (member.id !== id) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return await this.memberService.deleteMember(id, refreshToken);
   }
@@ -248,7 +248,7 @@ export class MemberController {
     @Body() updateProfileRequestDto: UpdateProfileRequestDto,
   ): Promise<ProfileResponseDto> {
     if (member.id !== id) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return await this.profileService.updateProfile(id, updateProfileRequestDto);
   }
@@ -287,7 +287,7 @@ export class MemberController {
     @Body() blogRequestDto: BlogRequestDto,
   ): Promise<BlogResponseDto> {
     if (member.id !== id) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return await this.blogService.createBlogInfo(id, blogRequestDto);
   }
@@ -309,7 +309,7 @@ export class MemberController {
     @Body() blogRequestDto: BlogRequestDto,
   ): Promise<BlogResponseDto> {
     if (member.id !== id) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return await this.blogService.updateBlogInfo(id, blogRequestDto);
   }
@@ -327,7 +327,7 @@ export class MemberController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
     if (member.id !== id) {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return await this.blogService.deleteBlogInfo(id);
   }

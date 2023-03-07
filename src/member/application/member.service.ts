@@ -1,7 +1,7 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { MemberRepository } from '../repository/member.repository';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -291,7 +291,7 @@ export class MemberService {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     if (member.refreshToken !== refreshToken) {
-      throw new UnauthorizedException();
+      throw new BadRequestException('올바르지 않은 parameter 입니다.');
     }
 
     await this.memberRepository.delete(member);
