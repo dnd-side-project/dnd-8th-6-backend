@@ -1,14 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { MemberRepository } from '../repository/member.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MemberResponseDto } from '../presentation/dto/member-response.dto';
 import { UpdateMemberRequestDto } from '../presentation/dto/update-member-request.dto';
 import { GithubClient } from './github.client';
 import { GithubContribution } from './dto/github-contribution-response.dto';
 import { Crawler } from './crawler';
-import { Member } from '../domain/member.entity';
 import { StarRepository } from '../../star/repository/star.repository';
-import { Star } from '../../star/domain/star.entity';
 import { MemberGithubResponseDto } from '../presentation/dto/member-github-response.dto';
 import { LogDataRepository } from '../../rank/repository/log-data.repository';
 import { DataLogTypeRepository } from '../../rank/repository/data-log-type.repository';
@@ -18,6 +15,10 @@ import { LogData } from '../../rank/domain/log-data.entity';
 import { GradeDto } from './dto/grade.dto';
 import { MemberSummaryResponseDto } from '../presentation/dto/member-summary-response.dto';
 import { BlogService } from './blog.service';
+import { ProfileService } from './profile.service';
+import { StarService } from '../../star/application/star.service';
+import { StarSummaryResponseDto } from '../presentation/dto/star-summary-response.dto';
+import { StarResponseDto } from '../../star/presentation/dto/star-response.dto';
 
 @Injectable()
 export class MemberService {
@@ -31,20 +32,47 @@ export class MemberService {
     @InjectRepository(DataLogTypeRepository)
     private readonly dataLogTypeRepository: DataLogTypeRepository,
     private readonly blogService: BlogService,
+    private readonly profileService: ProfileService,
+    private readonly starService: StarService,
     private readonly githubClient: GithubClient,
     private readonly crawler: Crawler,
   ) {}
 
-  public async getMemberSummary(
-    id: number,
-    year: number,
-    month: number,
-  ): Promise<MemberSummaryResponseDto> {
+  private async getStarSummary(star: StarResponseDto) {
+    const followSummary = [];
+    for (const followId of star.follow) {
+      const member = await this.memberRepository.findOneOrThrow(followId);
+      const grade = await this.getGrade(followId);
+
+      followSummary.push(new MemberSummaryResponseDto(member, grade));
+    }
+
+    const followerSummary = [];
+    for (const followerId of star.follower) {
+      const member = await this.memberRepository.findOneOrThrow(followerId);
+      const grade = await this.getGrade(followerId);
+
+      followerSummary.push(new MemberSummaryResponseDto(member, grade));
+    }
+
+    return new StarSummaryResponseDto(followSummary, followerSummary);
+  }
+
+  public async getMemberSummary(id: number): Promise<MemberSummaryResponseDto> {
     const member = await this.memberRepository.findOneOrThrow(id);
-    const grade = await this.getGrade(member, year, month);
+
+    const grade = await this.getGrade(id);
+
     const githubStat = await this.getGithubInfoById(id);
+
     const contributions = await this.getGithubContributionsInRepository(id);
+
     const blogStat = await this.blogService.getBlogInfo(id);
+
+    const star = await this.starService.getStarList(id);
+    const starSummary = await this.getStarSummary(star);
+
+    const profile = await this.profileService.getProfile(id);
 
     return new MemberSummaryResponseDto(
       member,
@@ -52,57 +80,27 @@ export class MemberService {
       githubStat,
       contributions,
       blogStat,
+      starSummary,
+      profile,
     );
   }
 
-  public async getMemberById(
-    requestedMember: Member,
-    id: number,
-    year: number,
-    month: number,
-  ): Promise<MemberResponseDto> {
-    const foundMember = await this.memberRepository.findOneOrThrow(id);
+  private async getGrade(id: number): Promise<GradeDto> {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
 
-    const grades = await this.getGrade(foundMember, year, month);
-    const grade = grades.grade;
-    const score = Math.round(grades.score);
-    const exp = grades.exp;
-
-    if (requestedMember.id !== foundMember.id) {
-      const star = await this.starRepository.findOne({
-        where: {
-          memberId: requestedMember,
-          followingId: foundMember,
-        },
-      });
-      return new MemberResponseDto(
-        foundMember,
-        star instanceof Star,
-        grade,
-        score,
-        exp,
-      );
-    }
-
-    return new MemberResponseDto(foundMember, null, grade, score, exp);
-  }
-
-  private async getGrade(
-    member: Member,
-    year: number,
-    month: number,
-  ): Promise<GradeDto> {
     const fromDate = `${year}-${month}-01`;
     const toDate =
       month === 12 ? `${year + 1}-01-01` : `${year}-${month + 1}-01`;
 
-    const commitScore = await this.getCommitScore(member, fromDate, toDate);
+    const commitScore = await this.getCommitScore(id, fromDate, toDate);
     const consecutiveScore = await this.getConsecutiveScore(
-      member,
+      id,
       fromDate,
       toDate,
     );
-    const blogScore = await this.getBlogScore(member, fromDate, toDate);
+    const blogScore = await this.getBlogScore(id, fromDate, toDate);
 
     const totalScore = Math.round(commitScore + consecutiveScore + blogScore);
 
@@ -124,13 +122,13 @@ export class MemberService {
   /**
    * 입력 받은 사용자, 연월에 해당하는 commitScore 를 반환한다.
    * 점수는 해당 월 commits * 1.2 으로 산정한다.
-   * @param member
+   * @param memberId
    * @param fromDate format(%Y-%m)
    * @param toDate format(%Y-%m)
    * @private
    */
   private async getCommitScore(
-    member: Member,
+    memberId: number,
     fromDate: string,
     toDate: string,
   ) {
@@ -141,7 +139,7 @@ export class MemberService {
     const result = await this.logDataRepository
       .createQueryBuilder('data')
       .select('COUNT(*)', 'commits')
-      .where('data.member_id = :memberId', { memberId: member.id })
+      .where('data.member_id = :memberId', { memberId: memberId })
       .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
       .andWhere('data.log_date >= :fromDate', {
         fromDate: fromDate,
@@ -157,13 +155,13 @@ export class MemberService {
   /**
    * 입력 받은 사용자, 연월에 해당하는 consecutiveScore 를 반환한다.
    * 점수는 해당 월의 최대 consecutiveCommits * 1.3 으로 산정한다.
-   * @param member
+   * @param memberId
    * @param fromDate format(%Y-%m)
    * @param toDate format(%Y-%m)
    * @private
    */
   private async getConsecutiveScore(
-    member: Member,
+    memberId: number,
     fromDate: string,
     toDate: string,
   ) {
@@ -173,7 +171,7 @@ export class MemberService {
 
     const logs = await this.logDataRepository
       .createQueryBuilder('data')
-      .where('data.member_id = :memberId', { memberId: member.id })
+      .where('data.member_id = :memberId', { memberId: memberId })
       .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
       .andWhere('data.log_date >= :fromDate', {
         fromDate: fromDate,
@@ -223,12 +221,16 @@ export class MemberService {
   /**
    * 입력 받은 사용자, 연월에 해당하는 blogScore 를 반환한다.
    * 점수는 해당 월의 articles * 2 으로 산정한다.
-   * @param member
+   * @param memberId
    * @param fromDate format(%Y-%m)
    * @param toDate format(%Y-%m)
    * @private
    */
-  private async getBlogScore(member: Member, fromDate: string, toDate: string) {
+  private async getBlogScore(
+    memberId: number,
+    fromDate: string,
+    toDate: string,
+  ) {
     const dataLogType = await this.dataLogTypeRepository.findOneLogType(
       LogType.ARTICLECNT.toString(),
     );
@@ -236,7 +238,7 @@ export class MemberService {
     const result = await this.logDataRepository
       .createQueryBuilder('data')
       .select('SUM(data_log)', 'articles')
-      .where('data.member_id = :memberId', { memberId: member.id })
+      .where('data.member_id = :memberId', { memberId: memberId })
       .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
       .andWhere('data.log_date >= :fromDate', {
         fromDate: fromDate,
@@ -304,7 +306,7 @@ export class MemberService {
     name: string,
     size: number,
     page: number,
-  ): Promise<MemberResponseDto[]> {
+  ): Promise<MemberSummaryResponseDto[]> {
     const members =
       await this.memberRepository.getMemberListByNameOrGithubIdLike(
         name,
@@ -312,10 +314,18 @@ export class MemberService {
         page,
       );
 
-    return members.map((member) => new MemberResponseDto(member));
+    const summaries = [];
+
+    for (const member of members) {
+      const grade = await this.getGrade(member.id);
+      const summary = new MemberSummaryResponseDto(member, grade);
+      summaries.push(summary);
+    }
+
+    return summaries;
   }
 
-  async updateMember(
+  public async updateMember(
     id: number,
     updateMemberRequestDto: UpdateMemberRequestDto,
   ) {
@@ -326,10 +336,12 @@ export class MemberService {
 
     await this.memberRepository.save(member);
 
-    return new MemberResponseDto(member);
+    const grade = await this.getGrade(id);
+
+    return new MemberSummaryResponseDto(member, grade);
   }
 
-  async deleteMember(id: number, refreshToken: string): Promise<void> {
+  public async deleteMember(id: number, refreshToken: string): Promise<void> {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     if (member.refreshToken !== refreshToken) {
@@ -339,7 +351,9 @@ export class MemberService {
     await this.memberRepository.delete(member);
   }
 
-  async getGithubContributionById(id: number): Promise<GithubContribution[]> {
+  public async getGithubContributionById(
+    id: number,
+  ): Promise<GithubContribution[]> {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     if (!member.githubId) {
@@ -356,7 +370,7 @@ export class MemberService {
     return githubContribution;
   }
 
-  async getGithubContributionsInRepository(
+  public async getGithubContributionsInRepository(
     id: number,
   ): Promise<GithubContribution[]> {
     const member = await this.memberRepository.findOneOrThrow(id);

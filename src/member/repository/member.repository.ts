@@ -4,7 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 
 @EntityRepository(Member)
 export class MemberRepository extends Repository<Member> {
-  public async findOneOrThrow(id: number, options?) {
+  public async findOneOrThrow(id: number, options?): Promise<Member> {
     let member;
 
     if (!options) {

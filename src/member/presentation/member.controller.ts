@@ -20,7 +20,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { MemberService } from '../application/member.service';
-import { MemberResponseDto } from './dto/member-response.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetMember } from '../../auth/presentation/get-member.decorator';
 import { Member } from '../domain/member.entity';
@@ -45,6 +44,23 @@ export class MemberController {
   ) {}
 
   @ApiOperation({
+    summary: '요청자 요약 정보 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 요약 정보',
+    type: MemberSummaryResponseDto,
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/me')
+  async getMemberByAccessToken(
+    @GetMember() member: Member,
+  ): Promise<MemberSummaryResponseDto> {
+    return await this.memberService.getMemberSummary(member.id);
+  }
+
+  @ApiOperation({
     summary: '사용자 요약 정보 조회',
   })
   @ApiResponse({
@@ -52,82 +68,13 @@ export class MemberController {
     description: '사용자 요약 정보',
     type: MemberSummaryResponseDto,
   })
-  @ApiQuery({ name: 'year', type: 'number', required: false })
-  @ApiQuery({ name: 'month', type: 'number', required: false })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
-  @Get('/summary/:id')
+  @Get('/:memberId')
   async getMemberSummary(
-    @Param('id', ParseIntPipe) memberId: number,
-    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
-    year: number,
-    @Query(
-      'month',
-      new DefaultValuePipe(new Date().getMonth() + 1),
-      ParseIntPipe,
-    )
-    month: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
   ): Promise<MemberSummaryResponseDto> {
-    return await this.memberService.getMemberSummary(memberId, year, month);
-  }
-
-  @ApiOperation({
-    summary: '요청자 정보 조회',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '사용자 정보',
-    type: MemberResponseDto,
-  })
-  @ApiQuery({ name: 'year', type: 'number', required: false })
-  @ApiQuery({ name: 'month', type: 'number', required: false })
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
-  @Get('/me')
-  async getMemberByAccessToken(
-    @GetMember() member: Member,
-    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
-    year: number,
-    @Query(
-      'month',
-      new DefaultValuePipe(new Date().getMonth() + 1),
-      ParseIntPipe,
-    )
-    month: number,
-  ): Promise<MemberResponseDto> {
-    return await this.memberService.getMemberById(
-      member,
-      member.id,
-      year,
-      month,
-    );
-  }
-
-  @ApiOperation({ summary: '사용자 조회' })
-  @ApiResponse({
-    status: 200,
-    description:
-      '사용자 정보를 조회합니다. year, month 값에 해당하는 기간의 등급을 반환합니다. 미입력시 기본 값은 현재 연도와 현재 월 입니다.',
-    type: MemberResponseDto,
-  })
-  @ApiQuery({ name: 'year', type: 'number', required: false })
-  @ApiQuery({ name: 'month', type: 'number', required: false })
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
-  @Get('/:id')
-  async getMemberById(
-    @GetMember() member: Member,
-    @Param('id', ParseIntPipe) id: number,
-    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
-    year: number,
-    @Query(
-      'month',
-      new DefaultValuePipe(new Date().getMonth() + 1),
-      ParseIntPipe,
-    )
-    month: number,
-  ): Promise<MemberResponseDto> {
-    return await this.memberService.getMemberById(member, id, year, month);
+    return await this.memberService.getMemberSummary(memberId);
   }
 
   @ApiOperation({
@@ -196,7 +143,7 @@ export class MemberController {
     @Query('name', new DefaultValuePipe('')) name: string,
     @Query('size', new DefaultValuePipe(10), ParseIntPipe) size: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  ): Promise<MemberResponseDto[]> {
+  ): Promise<MemberSummaryResponseDto[]> {
     return await this.memberService.getMemberList(name, size, page);
   }
 
@@ -206,7 +153,7 @@ export class MemberController {
   @ApiResponse({
     status: 200,
     description: '사용자 정보',
-    type: MemberResponseDto,
+    type: MemberSummaryResponseDto,
   })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
@@ -215,7 +162,7 @@ export class MemberController {
     @GetMember() member: Member,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMemberRequestDto: UpdateMemberRequestDto,
-  ): Promise<MemberResponseDto> {
+  ): Promise<MemberSummaryResponseDto> {
     if (member.id !== id) {
       throw new ForbiddenException();
     }

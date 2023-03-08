@@ -9,5 +9,6 @@ import { MemberRepository } from '../member/repository/member.repository';
   imports: [TypeOrmModule.forFeature([StarRepository, MemberRepository])],
   providers: [StarService],
   controllers: [StarController],
+  exports: [StarService],
 })
 export class StarModule {}

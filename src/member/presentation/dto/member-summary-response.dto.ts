@@ -6,6 +6,8 @@ import { BlogResponseDto } from './blog-response.dto';
 import { Member } from '../../domain/member.entity';
 import { GradeDto } from '../../application/dto/grade.dto';
 import { GithubContribution } from '../../application/dto/github-contribution-response.dto';
+import { ProfileResponseDto } from './profile-response.dto';
+import { StarSummaryResponseDto } from './star-summary-response.dto';
 
 export class MemberSummaryResponseDto {
   @ApiProperty()
@@ -33,20 +35,28 @@ export class MemberSummaryResponseDto {
   readonly exp: number;
 
   @ApiProperty()
-  readonly githubStat: MemberGithubResponseDto;
+  readonly githubStat?: MemberGithubResponseDto;
 
   @ApiProperty()
-  readonly contributions: GithubContribution[];
+  readonly contributions?: GithubContribution[];
 
   @ApiProperty()
   readonly blogStat?: BlogResponseDto;
 
+  @ApiProperty()
+  readonly star?: StarSummaryResponseDto;
+
+  @ApiProperty()
+  readonly profile: ProfileResponseDto;
+
   constructor(
     member: Member,
     grade: GradeDto,
-    githubStat: MemberGithubResponseDto,
+    githubStat?: MemberGithubResponseDto,
     contributions?: GithubContribution[],
     blogStat?: BlogResponseDto,
+    star?: StarSummaryResponseDto,
+    profile?: ProfileResponseDto,
   ) {
     this.id = member.id;
     this.name = member.name;
@@ -59,5 +69,7 @@ export class MemberSummaryResponseDto {
     this.githubStat = githubStat;
     this.contributions = contributions;
     this.blogStat = blogStat;
+    this.star = star;
+    this.profile = profile;
   }
 }
