@@ -81,8 +81,8 @@ export class LogDataRepository extends Repository<LogData> {
                         where member_id = '${member.id}'
                     ) as s
                     on today_rank.member_id = s.following_id
-                WHERE today_rank.ranking BETWEEN ${(page - 1) * 10 + 1} AND 20
-                order by today_rank.ranking asc, today_rank.member_id asc;`
+                order by today_rank.ranking asc, today_rank.member_id asc
+                LIMIT 20 OFFSET ${(page - 1) * 10};`
         );
 
         return results
@@ -90,6 +90,6 @@ export class LogDataRepository extends Repository<LogData> {
                 rank.ranking = parseInt(rank.ranking);
                 return rank;
             })
-            .sort(function(a, b){ return b-a; });
+            .sort(function(a, b){ return a.ranking-b.ranking; });
         }
 }
