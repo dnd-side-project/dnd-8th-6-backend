@@ -32,7 +32,7 @@ export class RankController {
   }
 
   @ApiOperation({ summary: '특정 user의 이름을 기준으로하는 검색 API' })
-  @ApiQuery({ name: 'keyword', description: '검색어', type: String, example: 'kiwi', required: true })
+  @ApiQuery({ name: 'keyword', description: '검색어', type: String, example: 'w', required: true })
   @ApiQuery({ name: 'filter', description: 'ranking을 매기는 특정 기준', enum: Filter, example: Filter.COMMITDATE, required: true })
   @ApiQuery({ name: 'page', description: '원하는 page의 값', type: Number, example: 1, required: true })
   @ApiOkResponse({ type: [RankDto] })
