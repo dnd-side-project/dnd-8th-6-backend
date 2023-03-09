@@ -8,6 +8,7 @@ import { Member } from 'src/member/domain/member.entity';
 import { RankDataDto } from '../application/dto/rank-log-data.dto';
 import { RankDto } from '../application/dto/rank.dto';
 import { LogDataService } from '../application/log-data.service';
+import { Filter } from '../domain/filter.enum';
 
 @Controller('rank')
 @ApiTags('rank')
@@ -15,9 +16,9 @@ export class RankController {
   constructor(private readonly logDataService: LogDataService) {}
 
   @ApiOperation({ summary: '특정 기준에 따른 user 랭킹 반환 API' })
-  @ApiQuery({ name: 'filter', type: String, required: true })
-  @ApiQuery({ name: 'page', type: Number, required: true })
-  @ApiOkResponse({ type: [RankDto] }) // 배열 타입 사용
+  @ApiQuery({ name: 'filter', description: 'ranking을 매기는 특정 기준', enum: Filter, example: Filter.COMMITDATE, required: true })
+  @ApiQuery({ name: 'page', description: '원하는 page의 값', type: Number, example: 1, required: true })
+  @ApiOkResponse({ type: [RankDto] })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('')

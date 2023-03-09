@@ -21,10 +21,13 @@ export class LogDataService {
 
   public moveMemberToFirst(rankData: RankDto[], memberId: number) {
     const index = rankData.findIndex((item) => item.memberId === memberId);
-    if (index !== -1) {
-        const item = rankData.splice(index, 1)[0];
-        rankData.unshift(item);
-    }
+
+    if (index === -1)
+      return rankData;
+
+    const item = rankData.splice(index, 1)[0];
+    rankData.unshift(item);
+
     return rankData;
   }
 }
