@@ -35,20 +35,20 @@ export class LogDataRepository extends Repository<LogData> {
         const { filter, page } = rankDataDto;
         const results = await this.query(
             `
-            select today_rank.member_id,
-                s.id as star_id,
+            select today_rank.member_id as memberId,
+                s.id as starId,
                 m.name,
-                m.profile_image_url,
+                m.profile_image_url as profileImageUrl,
                 today_rank.ranking, 
                 yesterday_rank.ranking, 
-                today_rank.data_log, 
-                today_rank.log_type_id,
+                today_rank.data_log as dataLog, 
+                today_rank.log_type_id as logTypeId,
                     CASE
                         WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
                         WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
                         WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
                         ELSE null
-                    END AS up_down
+                    END AS upDown
                 from (
                     SELECT
                     rank() over (order by data_log desc) as ranking,
@@ -86,10 +86,10 @@ export class LogDataRepository extends Repository<LogData> {
         );
 
         return results
-            .sort((x, y) => x.ranking.localeCompare(y.ranking))
             .map((rank) => {
                 rank.ranking = parseInt(rank.ranking);
                 return rank;
-            });
-    }
+            })
+            .sort(function(a, b){ return b-a; });
+        }
 }

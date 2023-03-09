@@ -15,6 +15,16 @@ export class LogDataService {
 
   public async getRank(rankDataDto: RankDataDto, member: Member): Promise<RankDto[]>  {
     const rankData = await this.logDataRepository.getRankByLogData(rankDataDto, member);
+    
+    return this.moveMemberToFirst(rankData, member.id);
+  }
+
+  public moveMemberToFirst(rankData: RankDto[], memberId: number) {
+    const index = rankData.findIndex((item) => item.memberId === memberId);
+    if (index !== -1) {
+        const item = rankData.splice(index, 1)[0];
+        rankData.unshift(item);
+    }
     return rankData;
   }
 }
