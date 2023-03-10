@@ -13,7 +13,6 @@ import { VelogCollector } from './velog.collector';
 import { NaverCollector } from './naver.collector';
 import { LogDataDto } from './dto/log-data.dto';
 
-
 @Injectable()
 export class LogDataCronService {
   private readonly logger = new Logger(LogDataCronService.name);
@@ -28,26 +27,36 @@ export class LogDataCronService {
     private readonly crawler: Crawler,
     private readonly velogCollector: VelogCollector,
     private readonly naverCollector: NaverCollector,
-    
   ) {}
 
   @Cron('0 10 */2 * * *')
   public async collectVelogLog() {
     const flatform = 'VELOG';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
-    const logType = await this.dataLogTypeRepository.findOneLogType('ARTICLECNT');
-    const upDateData = await Promise.all(member.map(async m => {
-      this.velogCollector.author = m.blog.blogName;
-      await this.velogCollector.getBlogData();
-      await this.velogCollector.convertXml2Json();
-      this.velogCollector.serialize();
-      const res = await Promise.all(this.velogCollector.jsonData.map(async data => {
-        const logData = new LogDataDto(data.pubDate, m.id, logType.id, data.articles.length);
-        const r = await this.logDataRepository.upsertLogData(logData);
-        return r;
-      }));
-      return res;
-    }));
+    const logType = await this.dataLogTypeRepository.findOneLogType(
+      'ARTICLECNT',
+    );
+    const upDateData = await Promise.all(
+      member.map(async (m) => {
+        this.velogCollector.author = m.blog.blogName;
+        await this.velogCollector.getBlogData();
+        await this.velogCollector.convertXml2Json();
+        this.velogCollector.serialize();
+        const res = await Promise.all(
+          this.velogCollector.jsonData.map(async (data) => {
+            const logData = new LogDataDto(
+              data.pubDate,
+              m.id,
+              logType.id,
+              data.articles.length,
+            );
+            const r = await this.logDataRepository.upsertLogData(logData);
+            return r;
+          }),
+        );
+        return res;
+      }),
+    );
 
     return upDateData;
   }
@@ -57,23 +66,33 @@ export class LogDataCronService {
     console.log('batvch');
     const flatform = 'NAVER';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
-    const logType = await this.dataLogTypeRepository.findOneLogType('ARTICLECNT');
-    const upDateData = await Promise.all(member.map(async m => {
-      this.naverCollector.author = m.blog.blogName;
-      await this.naverCollector.getBlogData();
-      await this.naverCollector.convertXml2Json();
-      this.naverCollector.serialize();
-      const res = await Promise.all(this.naverCollector.jsonData.map(async data => {
-        const logData = new LogDataDto(data.pubDate, m.id, logType.id, data.articles.length);
-        const r = await this.logDataRepository.upsertLogData(logData);
-        return r;
-      }));
-      return res;
-    }));
+    const logType = await this.dataLogTypeRepository.findOneLogType(
+      'ARTICLECNT',
+    );
+    const upDateData = await Promise.all(
+      member.map(async (m) => {
+        this.naverCollector.author = m.blog.blogName;
+        await this.naverCollector.getBlogData();
+        await this.naverCollector.convertXml2Json();
+        this.naverCollector.serialize();
+        const res = await Promise.all(
+          this.naverCollector.jsonData.map(async (data) => {
+            const logData = new LogDataDto(
+              data.pubDate,
+              m.id,
+              logType.id,
+              data.articles.length,
+            );
+            const r = await this.logDataRepository.upsertLogData(logData);
+            return r;
+          }),
+        );
+        return res;
+      }),
+    );
 
     return upDateData;
   }
-
 
   @Cron('0 0 */2 * * *')
   public async crawlGithubAndSaveOnRepository() {
@@ -115,13 +134,14 @@ export class LogDataCronService {
       }
 
       for (const contribution of contributions) {
-        if (!contribution.contribution) {
-          // contribution 이 없는 경우는 저장하지 않는다.
-          continue;
+        let dataLog = 0;
+
+        if (contribution.contribution) {
+          dataLog = Number.parseInt(contribution.contribution);
         }
 
         const logData = await this.logDataRepository.create({
-          dataLog: Number.parseInt(contribution.contribution),
+          dataLog: dataLog,
           logDate: contribution.date,
           memberId: member.id,
           logType: dataLogType,
@@ -179,10 +199,10 @@ export class LogDataCronService {
         .groupBy('data.log_date')
         .getMany();
 
-      if (logs.length === 0) {
-        continue;
+      let consecutiveDays = 0;
+      if (logs.length > 0) {
+        consecutiveDays = this.getConsecutiveDays(logs);
       }
-      const consecutiveDays = this.getConsecutiveDays(logs);
 
       const logData = await this.logDataRepository.create({
         dataLog: consecutiveDays,
@@ -219,9 +239,10 @@ export class LogDataCronService {
       const diffTime = prevDate.getTime() - currentDate.getTime();
       const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-      if (diffDays === 1) {
+      if (diffDays === 1 && logs[i].dataLog > 0) {
+        // 연속적인 날짜 및 유의미한 데이터가 존재할 때 연속 날짜로 취급
         consecutiveDays++;
-      } else if (diffDays > 1) {
+      } else {
         // 연속하지 않은 날짜를 만나면 함수 종료
         break;
       }
