@@ -207,9 +207,9 @@ export class MemberService {
       const diffTime = prevDate.valueOf() - currentDate.valueOf();
       const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-      if (diffDays === 1) {
+      if (diffDays === 1 && logs[i].dataLog > 0) {
         consecutiveDays++;
-      } else if (diffDays > 1) {
+      } else {
         maxConsecutiveDays = Math.max(maxConsecutiveDays, consecutiveDays);
         consecutiveDays = 1;
       }
@@ -394,8 +394,6 @@ export class MemberService {
       )
       .groupBy('date')
       .getRawMany<{ contribution: string; date: string }>();
-
-    console.log(result);
 
     return result.map(
       (log) => new GithubContribution(log.date, log.contribution),
