@@ -1,9 +1,8 @@
-import { Member } from 'src/member/domain/member.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import { LogDataDto } from '../application/dto/log-data.dto';
 import { RankDataDto } from '../application/dto/rank-log-data.dto';
-import { RankDto } from '../application/dto/rank.dto';
 import { LogData } from '../domain/log-data.entity';
+import { DataLogType } from '../domain/log-type.entity';
 
 @EntityRepository(LogData)
 export class LogDataRepository extends Repository<LogData> {
@@ -31,24 +30,21 @@ export class LogDataRepository extends Repository<LogData> {
         return await this.save(newLogData);
     }
 
-    public async getRankByLogData(rankDataDto: RankDataDto, member: Member): Promise<RankDto[]> {
+    public async getRankByLogData(rankDataDto: RankDataDto) {
         const { filter, page } = rankDataDto;
         const results = await this.query(
             `
-            select today_rank.member_id as memberId,
-                s.id as starId,
-                m.name,
-                m.profile_image_url as profileImageUrl,
+            select today_rank.member_id,
                 today_rank.ranking, 
                 yesterday_rank.ranking, 
-                today_rank.data_log as dataLog, 
-                today_rank.log_type_id as logTypeId,
+                today_rank.data_log, 
+                today_rank.log_type_id,
                     CASE
                         WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
                         WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
                         WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
                         ELSE null
-                    END AS upDown
+                    END AS up_down
                 from (
                     SELECT
                     rank() over (order by data_log desc) as ranking,
@@ -74,22 +70,10 @@ export class LogDataRepository extends Repository<LogData> {
                     WHERE DATE(ld.log_date) = DATE(NOW() - INTERVAL 1 DAY) AND dlt.log_type = '${filter}'
                 ) as yesterday_rank
                     on today_rank.member_id = yesterday_rank.member_id
-                left join member as m
-                    on today_rank.member_id = m.id
-                left join (
-                    select id, member_id, following_id from star
-                        where member_id = '${member.id}'
-                    ) as s
-                    on today_rank.member_id = s.following_id
-                order by today_rank.ranking asc, today_rank.member_id asc
-                LIMIT 20 OFFSET ${(page - 1) * 10};`
+                WHERE today_rank.ranking BETWEEN ${(page - 1) * 10 + 1} AND 20
+                order by today_rank.ranking asc, today_rank.member_id asc;            `
         );
 
-        return results
-            .map((rank) => {
-                rank.ranking = parseInt(rank.ranking);
-                return rank;
-            })
-            .sort(function(a, b){ return a.ranking-b.ranking; });
-        }
+        return results.sort((x, y) => x.ranking.localeCompare(y.ranking));
+    }
 }
