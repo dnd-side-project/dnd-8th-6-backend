@@ -10,4 +10,9 @@ export class GithubContribution {
   date: string;
   @ApiProperty()
   contribution: string;
+
+  constructor(date: string, contribution: string) {
+    this.date = date;
+    this.contribution = contribution;
+  }
 }

@@ -13,6 +13,7 @@ import { Crawler } from './application/crawler';
 import { LogDataRepository } from '../rank/repository/log-data.repository';
 import { DataLogTypeRepository } from '../rank/repository/data-log-type.repository';
 import { StarRepository } from '../star/repository/star.repository';
+import { StarModule } from '../star/star.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { StarRepository } from '../star/repository/star.repository';
       StarRepository,
     ]),
     HttpModule,
+    StarModule,
   ],
   providers: [
     MemberService,
