@@ -1,24 +1,24 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { MemberRepository } from '../repository/member.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MemberResponseDto } from '../presentation/dto/member-response.dto';
 import { UpdateMemberRequestDto } from '../presentation/dto/update-member-request.dto';
 import { GithubClient } from './github.client';
 import { GithubContribution } from './dto/github-contribution-response.dto';
 import { Crawler } from './crawler';
-import { Member } from '../domain/member.entity';
 import { StarRepository } from '../../star/repository/star.repository';
-import { Star } from '../../star/domain/star.entity';
 import { MemberGithubResponseDto } from '../presentation/dto/member-github-response.dto';
 import { LogDataRepository } from '../../rank/repository/log-data.repository';
 import { DataLogTypeRepository } from '../../rank/repository/data-log-type.repository';
 import { LogType } from '../../rank/domain/log-type.enum';
 import { MemberGrade } from '../domain/member-grade.enum';
 import { LogData } from '../../rank/domain/log-data.entity';
+import { GradeDto } from './dto/grade.dto';
+import { MemberSummaryResponseDto } from '../presentation/dto/member-summary-response.dto';
+import { BlogService } from './blog.service';
+import { ProfileService } from './profile.service';
+import { StarService } from '../../star/application/star.service';
+import { StarSummaryResponseDto } from '../presentation/dto/star-summary-response.dto';
+import { StarResponseDto } from '../../star/presentation/dto/star-response.dto';
 
 @Injectable()
 export class MemberService {
@@ -31,66 +31,104 @@ export class MemberService {
     private readonly logDataRepository: LogDataRepository,
     @InjectRepository(DataLogTypeRepository)
     private readonly dataLogTypeRepository: DataLogTypeRepository,
+    private readonly blogService: BlogService,
+    private readonly profileService: ProfileService,
+    private readonly starService: StarService,
     private readonly githubClient: GithubClient,
     private readonly crawler: Crawler,
   ) {}
 
-  public async getMemberById(
-    requestedMember: Member,
-    id: number,
-    year: number,
-    month: number,
-  ): Promise<MemberResponseDto> {
-    const foundMember = await this.memberRepository.findOneOrThrow(id);
+  private async getStarSummary(star: StarResponseDto) {
+    const followSummary = [];
+    for (const followId of star.follow) {
+      const member = await this.memberRepository.findOneOrThrow(followId);
+      const grade = await this.getGrade(followId);
 
-    const grade = await this.getGrade(foundMember, year, month);
-
-    if (requestedMember.id !== foundMember.id) {
-      const star = await this.starRepository.findOne({
-        where: {
-          memberId: requestedMember,
-          followingId: foundMember,
-        },
-      });
-      return new MemberResponseDto(foundMember, star instanceof Star, grade);
+      followSummary.push(new MemberSummaryResponseDto(member, grade));
     }
 
-    return new MemberResponseDto(foundMember, null, grade);
+    const followerSummary = [];
+    for (const followerId of star.follower) {
+      const member = await this.memberRepository.findOneOrThrow(followerId);
+      const grade = await this.getGrade(followerId);
+
+      followerSummary.push(new MemberSummaryResponseDto(member, grade));
+    }
+
+    return new StarSummaryResponseDto(followSummary, followerSummary);
   }
 
-  private async getGrade(member: Member, year: number, month: number) {
+  public async getMemberSummary(id: number): Promise<MemberSummaryResponseDto> {
+    const member = await this.memberRepository.findOneOrThrow(id);
+
+    const grade = await this.getGrade(id);
+
+    const githubStat = await this.getGithubInfoById(id);
+
+    const contributions = await this.getGithubContributionsInRepository(id);
+
+    const blogStat = await this.blogService.getBlogInfo(id);
+
+    const star = await this.starService.getStarList(id);
+    const starSummary = await this.getStarSummary(star);
+
+    const profile = await this.profileService.getProfile(id);
+
+    return new MemberSummaryResponseDto(
+      member,
+      grade,
+      githubStat,
+      contributions,
+      blogStat,
+      starSummary,
+      profile,
+    );
+  }
+
+  private async getGrade(id: number): Promise<GradeDto> {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+
     const fromDate = `${year}-${month}-01`;
     const toDate =
       month === 12 ? `${year + 1}-01-01` : `${year}-${month + 1}-01`;
 
-    const commitScore = await this.getCommitScore(member, fromDate, toDate);
+    const commitScore = await this.getCommitScore(id, fromDate, toDate);
     const consecutiveScore = await this.getConsecutiveScore(
-      member,
+      id,
       fromDate,
       toDate,
     );
-    const blogScore = await this.getBlogScoreThisMonth(
-      member,
-      fromDate,
-      toDate,
-    );
+    const blogScore = await this.getBlogScore(id, fromDate, toDate);
 
-    const score = commitScore + consecutiveScore + blogScore;
+    const totalScore = Math.round(commitScore + consecutiveScore + blogScore);
 
-    if (score >= 60) {
-      return MemberGrade.MASTER;
+    if (totalScore >= 60) {
+      return new GradeDto(MemberGrade.MASTER, 100, totalScore);
     }
-    if (score >= 40) {
-      return MemberGrade.DIAMOND;
+    if (totalScore >= 40) {
+      const exp = Math.round(((totalScore - 40) / 20) * 100);
+      return new GradeDto(MemberGrade.DIAMOND, exp, totalScore);
     }
-    if (score >= 20) {
-      return MemberGrade.PLATINUM;
+    if (totalScore >= 20) {
+      const exp = Math.round(((totalScore - 20) / 20) * 100);
+      return new GradeDto(MemberGrade.PLATINUM, exp, totalScore);
     }
-    return MemberGrade.GOLD;
+    const exp = Math.round((totalScore / 20) * 100);
+    return new GradeDto(MemberGrade.GOLD, exp, totalScore);
   }
 
+  /**
+   * 입력 받은 사용자, 연월에 해당하는 commitScore 를 반환한다.
+   * 점수는 해당 월 commits * 1.2 으로 산정한다.
+   * @param memberId
+   * @param fromDate format(%Y-%m)
+   * @param toDate format(%Y-%m)
+   * @private
+   */
   private async getCommitScore(
-    member: Member,
+    memberId: number,
     fromDate: string,
     toDate: string,
   ) {
@@ -101,7 +139,7 @@ export class MemberService {
     const result = await this.logDataRepository
       .createQueryBuilder('data')
       .select('COUNT(*)', 'commits')
-      .where('data.member_id = :memberId', { memberId: member.id })
+      .where('data.member_id = :memberId', { memberId: memberId })
       .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
       .andWhere('data.log_date >= :fromDate', {
         fromDate: fromDate,
@@ -114,8 +152,16 @@ export class MemberService {
     return result.commits * 1.2;
   }
 
+  /**
+   * 입력 받은 사용자, 연월에 해당하는 consecutiveScore 를 반환한다.
+   * 점수는 해당 월의 최대 consecutiveCommits * 1.3 으로 산정한다.
+   * @param memberId
+   * @param fromDate format(%Y-%m)
+   * @param toDate format(%Y-%m)
+   * @private
+   */
   private async getConsecutiveScore(
-    member: Member,
+    memberId: number,
     fromDate: string,
     toDate: string,
   ) {
@@ -125,7 +171,7 @@ export class MemberService {
 
     const logs = await this.logDataRepository
       .createQueryBuilder('data')
-      .where('data.member_id = :memberId', { memberId: member.id })
+      .where('data.member_id = :memberId', { memberId: memberId })
       .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
       .andWhere('data.log_date >= :fromDate', {
         fromDate: fromDate,
@@ -141,37 +187,47 @@ export class MemberService {
     return consecutiveDays * 1.3;
   }
 
+  /**
+   * 입력받은 logs 의 최대 연속 커밋 일수를 반환한다.
+   * @param logs
+   * @private
+   */
   private getConsecutiveDays(logs: LogData[]) {
-    if (logs.length <= 1) {
-      return logs.length;
+    if (logs.length === 0) {
+      return 0;
     }
 
     let prevDate = new Date(logs[0].logDate); // 이전 날짜
     let consecutiveDays = 1; // 연속한 날짜 수
+    let maxConsecutiveDays = 1;
 
-    let maxConsecutiveDays = 0;
     // 데이터가 1일만 유효하다면 연속 1일
     for (let i = 1; i < logs.length; i++) {
       const currentDate = new Date(logs[i].logDate);
-      const diffTime = prevDate.getTime() - currentDate.getTime();
+      const diffTime = prevDate.valueOf() - currentDate.valueOf();
       const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
       if (diffDays === 1) {
         consecutiveDays++;
       } else if (diffDays > 1) {
-        maxConsecutiveDays =
-          maxConsecutiveDays > consecutiveDays
-            ? maxConsecutiveDays
-            : consecutiveDays;
+        maxConsecutiveDays = Math.max(maxConsecutiveDays, consecutiveDays);
         consecutiveDays = 1;
       }
       prevDate = currentDate;
     }
-    return maxConsecutiveDays === 0 ? consecutiveDays : maxConsecutiveDays;
+    return Math.max(maxConsecutiveDays, consecutiveDays);
   }
 
-  private async getBlogScoreThisMonth(
-    member: Member,
+  /**
+   * 입력 받은 사용자, 연월에 해당하는 blogScore 를 반환한다.
+   * 점수는 해당 월의 articles * 2 으로 산정한다.
+   * @param memberId
+   * @param fromDate format(%Y-%m)
+   * @param toDate format(%Y-%m)
+   * @private
+   */
+  private async getBlogScore(
+    memberId: number,
     fromDate: string,
     toDate: string,
   ) {
@@ -182,7 +238,7 @@ export class MemberService {
     const result = await this.logDataRepository
       .createQueryBuilder('data')
       .select('SUM(data_log)', 'articles')
-      .where('data.member_id = :memberId', { memberId: member.id })
+      .where('data.member_id = :memberId', { memberId: memberId })
       .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
       .andWhere('data.log_date >= :fromDate', {
         fromDate: fromDate,
@@ -206,7 +262,7 @@ export class MemberService {
       member.githubId,
     );
 
-    const contributions = await this.getGithubContributions(id);
+    const contributions = await this.getTotalContributions(id);
     const consecutiveCommits = await this.getConsecutiveCommits(id);
 
     return new MemberGithubResponseDto(
@@ -216,7 +272,7 @@ export class MemberService {
     );
   }
 
-  private async getGithubContributions(memberId: number) {
+  private async getTotalContributions(memberId: number) {
     const logType = await this.dataLogTypeRepository.findOneLogType(
       LogType.COMMIT.toString(),
     );
@@ -246,16 +302,30 @@ export class MemberService {
     return consecutiveLogData !== null ? consecutiveLogData.dataLog : 0;
   }
 
-  public async getMemberList(name: string): Promise<MemberResponseDto[]> {
-    if (!name) name = '';
-
+  public async getMemberList(
+    name: string,
+    size: number,
+    page: number,
+  ): Promise<MemberSummaryResponseDto[]> {
     const members =
-      await this.memberRepository.getMemberListByNameOrGithubIdLike(name);
+      await this.memberRepository.getMemberListByNameOrGithubIdLike(
+        name,
+        size,
+        page,
+      );
 
-    return members.map((member) => new MemberResponseDto(member));
+    const summaries = [];
+
+    for (const member of members) {
+      const grade = await this.getGrade(member.id);
+      const summary = new MemberSummaryResponseDto(member, grade);
+      summaries.push(summary);
+    }
+
+    return summaries;
   }
 
-  async updateMember(
+  public async updateMember(
     id: number,
     updateMemberRequestDto: UpdateMemberRequestDto,
   ) {
@@ -266,20 +336,24 @@ export class MemberService {
 
     await this.memberRepository.save(member);
 
-    return new MemberResponseDto(member);
+    const grade = await this.getGrade(id);
+
+    return new MemberSummaryResponseDto(member, grade);
   }
 
-  async deleteMember(id: number, refreshToken: string): Promise<void> {
+  public async deleteMember(id: number, refreshToken: string): Promise<void> {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     if (member.refreshToken !== refreshToken) {
-      throw new UnauthorizedException();
+      throw new BadRequestException('올바르지 않은 parameter 입니다.');
     }
 
     await this.memberRepository.delete(member);
   }
 
-  async getGithubContributionById(id: number): Promise<GithubContribution[]> {
+  public async getGithubContributionById(
+    id: number,
+  ): Promise<GithubContribution[]> {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     if (!member.githubId) {
@@ -294,5 +368,37 @@ export class MemberService {
     await this.crawler.closeBrowser();
 
     return githubContribution;
+  }
+
+  public async getGithubContributionsInRepository(
+    id: number,
+  ): Promise<GithubContribution[]> {
+    const member = await this.memberRepository.findOneOrThrow(id);
+
+    if (!member.githubId) {
+      throw new BadRequestException('github 계정이 등록되지 않았습니다.');
+    }
+
+    const type = await this.dataLogTypeRepository.findOneLogType(
+      LogType.COMMIT.toString(),
+    );
+
+    const result = await this.logDataRepository
+      .createQueryBuilder('data')
+      .select('SUM(data.data_log)', 'contribution')
+      .addSelect('DATE_FORMAT(data.log_date, "%Y-%m")', 'date')
+      .where('data.member_id = :memberId', { memberId: id })
+      .andWhere('data.log_type_id = :logTypeId', { logTypeId: type.id })
+      .andWhere(
+        'data.log_date  > DATE_FORMAT(NOW() - INTERVAL 1 YEAR + INTERVAL 1 MONTH, "%Y-%m-01")',
+      )
+      .groupBy('date')
+      .getRawMany<{ contribution: string; date: string }>();
+
+    console.log(result);
+
+    return result.map(
+      (log) => new GithubContribution(log.date, log.contribution),
+    );
   }
 }
