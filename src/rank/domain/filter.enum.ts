@@ -1,5 +1,5 @@
 export enum Filter {
-    STAR = 'STAR',
-    COMMIT = 'COMMIT',
-    COMMITDATE = 'COMMITDATE',
-  }
+  STAR = 'STAR',
+  COMMIT = 'COMMIT',
+  COMMITDATE = 'COMMITDATE',
+}

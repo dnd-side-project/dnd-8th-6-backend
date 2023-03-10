@@ -6,6 +6,7 @@ export class RankDataDto {
   @IsString()
   @IsEnum(Filter)
   filter: Filter;
+
   @IsInt()
   @Transform(({ value }) => parseInt(value))
   page: number;

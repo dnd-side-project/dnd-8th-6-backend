@@ -14,7 +14,7 @@ export class RankDto {
   @ApiProperty()
   @IsString()
   name: string;  
-
+  
   @ApiProperty()
   @IsString()
   profileImageurl: string;
