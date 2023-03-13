@@ -19,6 +19,7 @@ import { ProfileService } from './profile.service';
 import { StarService } from '../../star/application/star.service';
 import { StarSummaryResponseDto } from '../presentation/dto/star-summary-response.dto';
 import { StarResponseDto } from '../../star/presentation/dto/star-response.dto';
+import { LogDataService } from 'src/rank/application/log-data.service';
 
 @Injectable()
 export class MemberService {
@@ -34,6 +35,7 @@ export class MemberService {
     private readonly blogService: BlogService,
     private readonly profileService: ProfileService,
     private readonly starService: StarService,
+    private readonly logDataService: LogDataService,
     private readonly githubClient: GithubClient,
     private readonly crawler: Crawler,
   ) {}
@@ -58,11 +60,13 @@ export class MemberService {
     return new StarSummaryResponseDto(followSummary, followerSummary);
   }
 
-  public async getMemberSummary(id: number): Promise<MemberSummaryResponseDto> {
+  public async getMemberSummary(filer: string, id: number): Promise<MemberSummaryResponseDto> {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     const grade = await this.getGrade(id);
 
+    const rank = await this.logDataService.getRankWithNeighbors(filer, id);
+    
     const githubStat = await this.getGithubInfoById(id);
 
     const contributions = await this.getGithubContributionsInRepository(id);
