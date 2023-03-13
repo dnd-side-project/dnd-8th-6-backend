@@ -50,28 +50,32 @@ export class LogDataRepository extends Repository<LogData> {
                     END AS upDown
                 from (
                     SELECT
-                    rank() over (order by data_log desc) as ranking,
-                    ld.data_log,
+                    rank() over (order by max(data_log) desc) as ranking,
+                    max(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) = DATE(NOW()) AND dlt.log_type = '${filter}'
+                    WHERE DATE(ld.log_date) >= DATE_FORMAT(NOW() ,'%Y-%m-01')
+                    AND dlt.log_type = '${filter}'
+                    group by ld.member_id, ld.member_id
                     order by ranking asc, ld.member_id asc) as today_rank
                 left outer join (
                     SELECT
-                    rank() over (order by data_log desc) as ranking,
-                    ld.data_log,
+                    rank() over (order by max(data_log) desc) as ranking,
+                    max(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) = DATE(NOW() - INTERVAL 1 DAY) AND dlt.log_type = '${filter}'
-                ) as yesterday_rank
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() - INTERVAL 1 MONTH ,'%Y-%m-01') AND DATE(NOW() - INTERVAL 1 DAY)
+                    AND dlt.log_type = '${filter}'
+                    group by ld.member_id, ld.member_id
+                    ) as yesterday_rank
                     on today_rank.member_id = yesterday_rank.member_id
                 left join member as m
                     on today_rank.member_id = m.id
@@ -111,28 +115,32 @@ export class LogDataRepository extends Repository<LogData> {
                     END AS upDown
                 from (
                     SELECT
-                    rank() over (order by data_log desc) as ranking,
-                    ld.data_log,
+                    rank() over (order by max(data_log) desc) as ranking,
+                    max(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) = DATE(NOW()) AND dlt.log_type = '${filter}'
+                    WHERE DATE(ld.log_date) >= DATE_FORMAT(NOW() ,'%Y-%m-01')
+                    AND dlt.log_type = '${filter}'
+                    group by ld.member_id, ld.member_id
                     order by ranking asc, ld.member_id asc) as today_rank
                 left outer join (
                     SELECT
-                    rank() over (order by data_log desc) as ranking,
-                    ld.data_log,
+                    rank() over (order by max(data_log) desc) as ranking,
+                    max(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) = DATE(NOW() - INTERVAL 1 DAY) AND dlt.log_type = '${filter}'
-                ) as yesterday_rank
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() - INTERVAL 1 MONTH ,'%Y-%m-01') AND DATE(NOW() - INTERVAL 1 DAY)
+                    AND dlt.log_type = '${filter}'
+                    group by ld.member_id, ld.member_id
+                    ) as yesterday_rank
                     on today_rank.member_id = yesterday_rank.member_id
                 left join member as m
                     on today_rank.member_id = m.id
