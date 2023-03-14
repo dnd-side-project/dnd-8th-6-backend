@@ -33,6 +33,7 @@ export class LogDataRepository extends Repository<LogData> {
 
     public async getRankByLogData(rankDataDto: RankDataDto, member: Member): Promise<RankDto[]> {
         const { filter, page } = rankDataDto;
+        const aggregationFunction = filter === 'COMMITDATE' ? 'MAX' : 'SUM';
         const results = await this.query(
             `
             select today_rank.member_id as memberId,
@@ -50,8 +51,8 @@ export class LogDataRepository extends Repository<LogData> {
                     END AS upDown
                 from (
                     SELECT
-                    rank() over (order by max(data_log) desc) as ranking,
-                    max(ld.data_log) as data_log,
+                    rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
+                    ${aggregationFunction}(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
@@ -64,8 +65,8 @@ export class LogDataRepository extends Repository<LogData> {
                     order by ranking asc, ld.member_id asc) as today_rank
                 left outer join (
                     SELECT
-                    rank() over (order by max(data_log) desc) as ranking,
-                    max(ld.data_log) as data_log,
+                    rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
+                    ${aggregationFunction}(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
@@ -98,6 +99,8 @@ export class LogDataRepository extends Repository<LogData> {
 
     public async getRankByKeaword(rankSearchDto: RankSearchDto, member: Member): Promise<RankDto[]> {
         const { keyword, filter, page } = rankSearchDto;
+        const aggregationFunction = filter === 'COMMITDATE' ? 'MAX' : 'SUM';
+
         const results = await this.query(
             `
             select today_rank.member_id as memberId,
@@ -115,8 +118,8 @@ export class LogDataRepository extends Repository<LogData> {
                     END AS upDown
                 from (
                     SELECT
-                    rank() over (order by max(data_log) desc) as ranking,
-                    max(ld.data_log) as data_log,
+                    rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
+                    ${aggregationFunction}(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
@@ -129,8 +132,8 @@ export class LogDataRepository extends Repository<LogData> {
                     order by ranking asc, ld.member_id asc) as today_rank
                 left outer join (
                     SELECT
-                    rank() over (order by max(data_log) desc) as ranking,
-                    max(ld.data_log) as data_log,
+                    rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
+                    ${aggregationFunction}(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
@@ -163,6 +166,9 @@ export class LogDataRepository extends Repository<LogData> {
     }
 
     public async getRankWithNeighbors(filter: string, memberId: number): Promise<RankDto[]> {
+        const aggregationFunction = filter === 'COMMITDATE' ? 'MAX' : 'SUM';
+
+        
         const results = await this.query(
             `
             select R1.memberId, R1.starId, R1.name, R1.profileImageUrl, R1.ranking, R1.dataLog, R1.logTypeId
@@ -182,8 +188,8 @@ export class LogDataRepository extends Repository<LogData> {
                     END AS upDown
                 from (
                     SELECT
-                    rank() over (order by max(data_log) desc) as ranking,
-                    max(ld.data_log) as data_log,
+                    rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
+                    ${aggregationFunction}(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
@@ -196,8 +202,8 @@ export class LogDataRepository extends Repository<LogData> {
                     order by ranking asc, ld.member_id asc) as today_rank
                 left outer join (
                     SELECT
-                    rank() over (order by max(data_log) desc) as ranking,
-                    max(ld.data_log) as data_log,
+                    rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
+                    ${aggregationFunction}(ld.data_log) as data_log,
                     ld.log_date,
                     ld.member_id,
                     ld.log_type_id
@@ -224,8 +230,8 @@ export class LogDataRepository extends Repository<LogData> {
                         today_rank.ranking 
                         from (
                             SELECT
-                            rank() over (order by max(data_log) desc) as ranking,
-                            max(ld.data_log) as data_log,
+                            rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
+                            ${aggregationFunction}(ld.data_log) as data_log,
                             ld.log_date,
                             ld.member_id,
                             ld.log_type_id

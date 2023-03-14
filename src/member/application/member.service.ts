@@ -86,6 +86,7 @@ export class MemberService {
       blogStat,
       starSummary,
       profile,
+      rank
     );
   }
 
