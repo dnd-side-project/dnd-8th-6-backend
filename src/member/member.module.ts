@@ -14,6 +14,7 @@ import { LogDataRepository } from '../rank/repository/log-data.repository';
 import { DataLogTypeRepository } from '../rank/repository/data-log-type.repository';
 import { StarRepository } from '../star/repository/star.repository';
 import { StarModule } from '../star/star.module';
+import { LogDataService } from 'src/rank/application/log-data.service';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { StarModule } from '../star/star.module';
     MemberService,
     ProfileService,
     BlogService,
+    LogDataService,
     GithubClient,
     Crawler,
   ],

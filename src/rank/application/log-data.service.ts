@@ -26,6 +26,12 @@ export class LogDataService {
     return rankData;
   }
 
+  public async getRankWithNeighbors(filter: string, memberId: number): Promise<RankDto[]>  {
+    const rankData = await this.logDataRepository.getRankWithNeighbors(filter, memberId);
+
+    return rankData;
+  }
+
   public moveMemberToFirst(rankData: RankDto[], memberId: number) {
     const index = rankData.findIndex((item) => item.memberId === memberId);
 

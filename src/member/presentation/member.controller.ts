@@ -33,6 +33,7 @@ import { ProfileResponseDto } from './dto/profile-response.dto';
 import { GithubContribution } from '../application/dto/github-contribution-response.dto';
 import { MemberGithubResponseDto } from './dto/member-github-response.dto';
 import { MemberSummaryResponseDto } from './dto/member-summary-response.dto';
+import { Filter } from 'src/rank/domain/filter.enum';
 
 @Controller('member')
 @ApiTags('Member')
@@ -51,13 +52,15 @@ export class MemberController {
     description: '사용자 요약 정보',
     type: MemberSummaryResponseDto,
   })
+  @ApiQuery({ name: 'filter', description: 'ranking을 매기는 특정 기준', enum: Filter, example: Filter.COMMITDATE, required: true })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/me')
   async getMemberByAccessToken(
+    @Query('filter', new DefaultValuePipe(Filter.COMMIT)) filter: string,
     @GetMember() member: Member,
   ): Promise<MemberSummaryResponseDto> {
-    return await this.memberService.getMemberSummary(member.id);
+    return await this.memberService.getMemberSummary(filter, member.id);
   }
 
   @ApiOperation({
@@ -73,8 +76,9 @@ export class MemberController {
   @Get('/:memberId')
   async getMemberSummary(
     @Param('memberId', ParseIntPipe) memberId: number,
+    @Query('filter', new DefaultValuePipe(Filter.COMMIT)) filter: Filter,
   ): Promise<MemberSummaryResponseDto> {
-    return await this.memberService.getMemberSummary(memberId);
+    return await this.memberService.getMemberSummary(filter, memberId);
   }
 
   @ApiOperation({
