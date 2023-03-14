@@ -34,6 +34,9 @@ export class LogDataRepository extends Repository<LogData> {
     public async getRankByLogData(rankDataDto: RankDataDto, member: Member): Promise<RankDto[]> {
         const { filter, page } = rankDataDto;
         const aggregationFunction = filter === 'COMMITDATE' ? 'MAX' : 'SUM';
+        const today = new Date();
+        const yesterDay = today.getDate() === 1 ? new Date().toISOString().slice(0, 8) + '01' : new Date().toISOString();
+
         const results = await this.query(
             `
             select today_rank.member_id as memberId,
@@ -43,12 +46,12 @@ export class LogDataRepository extends Repository<LogData> {
                 today_rank.ranking, 
                 today_rank.data_log as dataLog, 
                 today_rank.log_type_id as logTypeId,
-                    CASE
-                        WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
-                        WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
-                        WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
-                        ELSE null
-                    END AS upDown
+                CASE
+                    WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
+                    WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
+                    WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
+                    ELSE null
+                END AS upDown
                 from (
                     SELECT
                     rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
@@ -59,7 +62,8 @@ export class LogDataRepository extends Repository<LogData> {
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) >= DATE_FORMAT(NOW() ,'%Y-%m-01')
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() ,'%Y-%m-01') AND DATE(NOW()) AND
+                    DATE(ld.log_date) <= DATE(NOW())
                     AND dlt.log_type = '${filter}'
                     group by ld.member_id, ld.member_id
                     order by ranking asc, ld.member_id asc) as today_rank
@@ -73,7 +77,7 @@ export class LogDataRepository extends Repository<LogData> {
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() - INTERVAL 1 MONTH ,'%Y-%m-01') AND DATE(NOW() - INTERVAL 1 DAY)
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT('${yesterDay}' ,'%Y-%m-01') AND DATE('${yesterDay}')
                     AND dlt.log_type = '${filter}'
                     group by ld.member_id, ld.member_id
                     ) as yesterday_rank
@@ -100,6 +104,8 @@ export class LogDataRepository extends Repository<LogData> {
     public async getRankByKeaword(rankSearchDto: RankSearchDto, member: Member): Promise<RankDto[]> {
         const { keyword, filter, page } = rankSearchDto;
         const aggregationFunction = filter === 'COMMITDATE' ? 'MAX' : 'SUM';
+        const today = new Date();
+        const yesterDay = today.getDate() === 1 ? new Date().toISOString().slice(0, 8) + '01' : new Date().toISOString();
 
         const results = await this.query(
             `
@@ -110,12 +116,12 @@ export class LogDataRepository extends Repository<LogData> {
                 today_rank.ranking, 
                 today_rank.data_log as dataLog, 
                 today_rank.log_type_id as logTypeId,
-                    CASE
-                        WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
-                        WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
-                        WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
-                        ELSE null
-                    END AS upDown
+                CASE
+                    WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
+                    WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
+                    WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
+                    ELSE null
+                END AS upDown
                 from (
                     SELECT
                     rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
@@ -126,8 +132,8 @@ export class LogDataRepository extends Repository<LogData> {
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) >= DATE_FORMAT(NOW() ,'%Y-%m-01')
-                    AND dlt.log_type = '${filter}'
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() ,'%Y-%m-01') AND DATE(NOW()) AND
+                    dlt.log_type = '${filter}'
                     group by ld.member_id, ld.member_id
                     order by ranking asc, ld.member_id asc) as today_rank
                 left outer join (
@@ -140,7 +146,7 @@ export class LogDataRepository extends Repository<LogData> {
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() - INTERVAL 1 MONTH ,'%Y-%m-01') AND DATE(NOW() - INTERVAL 1 DAY)
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT('${yesterDay}' ,'%Y-%m-01') AND DATE('${yesterDay}')
                     AND dlt.log_type = '${filter}'
                     group by ld.member_id, ld.member_id
                     ) as yesterday_rank
@@ -167,8 +173,9 @@ export class LogDataRepository extends Repository<LogData> {
 
     public async getRankWithNeighbors(filter: string, memberId: number): Promise<RankDto[]> {
         const aggregationFunction = filter === 'COMMITDATE' ? 'MAX' : 'SUM';
+        const today = new Date();
+        const yesterDay = today.getDate() === 1 ? new Date().toISOString().slice(0, 8) + '01' : new Date().toISOString();
 
-        
         const results = await this.query(
             `
             select R1.memberId, R1.starId, R1.name, R1.profileImageUrl, R1.ranking, R1.dataLog, R1.logTypeId
@@ -181,11 +188,11 @@ export class LogDataRepository extends Repository<LogData> {
                 today_rank.data_log as dataLog, 
                 today_rank.log_type_id as logTypeId,
                 CASE
-                        WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
-                        WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
-                        WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
-                        ELSE null
-                    END AS upDown
+                    WHEN today_rank.ranking > yesterday_rank.ranking THEN 'up'
+                    WHEN today_rank.ranking < yesterday_rank.ranking THEN 'down'
+                    WHEN today_rank.ranking = yesterday_rank.ranking THEN 'unchanged'
+                    ELSE null
+                END AS upDown
                 from (
                     SELECT
                     rank() over (order by ${aggregationFunction}(data_log) desc) as ranking,
@@ -196,8 +203,8 @@ export class LogDataRepository extends Repository<LogData> {
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) >= DATE_FORMAT(NOW() ,'%Y-%m-01')
-                    AND dlt.log_type = '${filter}'
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() ,'%Y-%m-01') AND DATE(NOW()) AND
+                    dlt.log_type = '${filter}'
                     group by ld.member_id, ld.member_id
                     order by ranking asc, ld.member_id asc) as today_rank
                 left outer join (
@@ -210,7 +217,7 @@ export class LogDataRepository extends Repository<LogData> {
                     FROM log_data as ld
                     left join data_log_type as dlt
                     on dlt.id = ld.log_type_id
-                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() - INTERVAL 1 MONTH ,'%Y-%m-01') AND DATE(NOW() - INTERVAL 1 DAY)
+                    WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT('${yesterDay}' ,'%Y-%m-01') AND DATE('${yesterDay}')
                     AND dlt.log_type = '${filter}'
                     group by ld.member_id, ld.member_id
                 ) as yesterday_rank
@@ -238,7 +245,7 @@ export class LogDataRepository extends Repository<LogData> {
                             FROM log_data as ld
                             left join data_log_type as dlt
                             on dlt.id = ld.log_type_id
-                            WHERE DATE(ld.log_date) >= DATE_FORMAT(NOW() ,'%Y-%m-01')
+                            WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() ,'%Y-%m-01') AND DATE(NOW())
                             AND dlt.log_type = 'COMMITDATE'
                             group by ld.member_id, ld.member_id
                             order by ranking asc, ld.member_id asc) as today_rank
