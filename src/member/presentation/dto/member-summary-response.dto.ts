@@ -8,7 +8,6 @@ import { GradeDto } from '../../application/dto/grade.dto';
 import { GithubContribution } from '../../application/dto/github-contribution-response.dto';
 import { ProfileResponseDto } from './profile-response.dto';
 import { StarSummaryResponseDto } from './star-summary-response.dto';
-import { RankDto, userRankDto } from '../../../rank/application/dto/rank.dto';
 
 export class MemberSummaryResponseDto {
   @ApiProperty()

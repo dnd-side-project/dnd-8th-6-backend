@@ -36,21 +36,6 @@ export class RankDto {
   upDown: string | null;
 }
 
-
-export class userRankDto {
-  @ApiProperty()
-  STAR: RankDto[];
-
-  @ApiProperty()
-  COMMIT: RankDto[];
-
-  @ApiProperty()
-  COMMITDATE: RankDto[];
-
-  @ApiProperty()
-  ARTICLECNT: RankDto[];
-}
-
 export class RankWithHostDto {
   @ApiProperty()
   hostRank: RankDto | null;
