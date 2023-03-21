@@ -37,7 +37,7 @@ export class MemberSummaryResponseDto {
   @ApiProperty()
   readonly githubStat?: MemberGithubResponseDto;
 
-  @ApiProperty()
+  @ApiProperty({ type: [GithubContribution] })
   readonly contributions?: GithubContribution[];
 
   @ApiProperty()
@@ -49,6 +49,11 @@ export class MemberSummaryResponseDto {
   @ApiProperty()
   readonly profile: ProfileResponseDto;
 
+  @ApiProperty()
+  readonly rank: any;
+
+  
+
   constructor(
     member: Member,
     grade: GradeDto,
@@ -57,6 +62,7 @@ export class MemberSummaryResponseDto {
     blogStat?: BlogResponseDto,
     star?: StarSummaryResponseDto,
     profile?: ProfileResponseDto,
+    rank?: any
   ) {
     this.id = member.id;
     this.name = member.name;
@@ -71,5 +77,6 @@ export class MemberSummaryResponseDto {
     this.blogStat = blogStat;
     this.star = star;
     this.profile = profile;
+    this.rank = rank;
   }
 }

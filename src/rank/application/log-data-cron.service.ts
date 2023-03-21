@@ -63,7 +63,7 @@ export class LogDataCronService {
 
   @Cron('0 20 */2 * * *')
   public async collectNaverLog() {
-    console.log('batvch');
+    console.log('batch');
     const flatform = 'NAVER';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
     const logType = await this.dataLogTypeRepository.findOneLogType(
