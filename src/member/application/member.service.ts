@@ -19,6 +19,8 @@ import { ProfileService } from './profile.service';
 import { StarService } from '../../star/application/star.service';
 import { StarSummaryResponseDto } from '../presentation/dto/star-summary-response.dto';
 import { StarResponseDto } from '../../star/presentation/dto/star-response.dto';
+import { LogDataService } from 'src/rank/application/log-data.service';
+import { Filter } from 'src/rank/domain/filter.enum';
 
 @Injectable()
 export class MemberService {
@@ -34,6 +36,7 @@ export class MemberService {
     private readonly blogService: BlogService,
     private readonly profileService: ProfileService,
     private readonly starService: StarService,
+    private readonly logDataService: LogDataService,
     private readonly githubClient: GithubClient,
     private readonly crawler: Crawler,
   ) {}
@@ -63,6 +66,13 @@ export class MemberService {
 
     const grade = await this.getGrade(id);
 
+    const rank = await Promise.all(Object.values(Filter).map(async (filter) => {
+      const ranking = await this.logDataService.getRankWithNeighbors(filter, id);
+      const rank = {};
+      rank[filter] = ranking;
+      return rank;
+    }));
+    
     const githubStat = await this.getGithubInfoById(id);
 
     const contributions = await this.getGithubContributionsInRepository(id);
@@ -82,6 +92,7 @@ export class MemberService {
       blogStat,
       starSummary,
       profile,
+      rank
     );
   }
 
@@ -207,9 +218,9 @@ export class MemberService {
       const diffTime = prevDate.valueOf() - currentDate.valueOf();
       const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-      if (diffDays === 1) {
+      if (diffDays === 1 && logs[i].dataLog > 0) {
         consecutiveDays++;
-      } else if (diffDays > 1) {
+      } else {
         maxConsecutiveDays = Math.max(maxConsecutiveDays, consecutiveDays);
         consecutiveDays = 1;
       }
@@ -394,8 +405,6 @@ export class MemberService {
       )
       .groupBy('date')
       .getRawMany<{ contribution: string; date: string }>();
-
-    console.log(result);
 
     return result.map(
       (log) => new GithubContribution(log.date, log.contribution),
