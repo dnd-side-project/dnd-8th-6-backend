@@ -20,6 +20,7 @@ import { StarService } from '../../star/application/star.service';
 import { StarSummaryResponseDto } from '../presentation/dto/star-summary-response.dto';
 import { StarResponseDto } from '../../star/presentation/dto/star-response.dto';
 import { LogDataService } from 'src/rank/application/log-data.service';
+import { Filter } from 'src/rank/domain/filter.enum';
 
 @Injectable()
 export class MemberService {
@@ -60,12 +61,17 @@ export class MemberService {
     return new StarSummaryResponseDto(followSummary, followerSummary);
   }
 
-  public async getMemberSummary(filer: string, id: number): Promise<MemberSummaryResponseDto> {
+  public async getMemberSummary(id: number): Promise<MemberSummaryResponseDto> {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     const grade = await this.getGrade(id);
 
-    const rank = await this.logDataService.getRankWithNeighbors(filer, id);
+    const rank = await Promise.all(Object.values(Filter).map(async (filter) => {
+      const ranking = await this.logDataService.getRankWithNeighbors(filter, id);
+      const rank = {};
+      rank[filter] = ranking;
+      return rank;
+    }));
     
     const githubStat = await this.getGithubInfoById(id);
 

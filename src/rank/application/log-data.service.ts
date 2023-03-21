@@ -4,7 +4,7 @@ import { Member } from 'src/member/domain/member.entity';
 import { LogDataRepository } from '../repository/log-data.repository';
 import { RankDataDto } from './dto/rank-log-data.dto';
 import { RankSearchDto } from './dto/rank-search.dto';
-import { RankDto } from './dto/rank.dto';
+import { RankDto, RankWithHostDto } from './dto/rank.dto';
 
 
 @Injectable()
@@ -14,10 +14,10 @@ export class LogDataService {
     private readonly logDataRepository: LogDataRepository,
   ) {}
 
-  public async getRank(rankDataDto: RankDataDto, member: Member): Promise<RankDto[]>  {
+  public async getRank(rankDataDto: RankDataDto, member: Member): Promise<RankWithHostDto>  {
     const rankData = await this.logDataRepository.getRankByLogData(rankDataDto, member);
 
-    return this.moveMemberToFirst(rankData, member.id);
+    return this.getHostRank(rankData, member.id);
   }
 
   public async getRankByKeaword(rankSearchDto: RankSearchDto, member: Member): Promise<RankDto[]>  {
@@ -32,15 +32,20 @@ export class LogDataService {
     return rankData;
   }
 
-  public moveMemberToFirst(rankData: RankDto[], memberId: number) {
+  public getHostRank(rankData: RankDto[], memberId: number) {
     const index = rankData.findIndex((item) => item.memberId === memberId);
 
     if (index === -1)
-      return rankData;
+      return {
+        hostRank: null,
+        rankData
+      };
 
     const item = rankData.splice(index, 1)[0];
-    rankData.unshift(item);
-
-    return rankData;
+    
+    return {
+      hostRank: item,
+      rankData
+    };
   }
 }

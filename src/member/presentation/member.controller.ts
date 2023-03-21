@@ -57,10 +57,9 @@ export class MemberController {
   @UseGuards(AuthGuard('jwt'))
   @Get('/me')
   async getMemberByAccessToken(
-    @Query('filter', new DefaultValuePipe(Filter.COMMIT)) filter: string,
     @GetMember() member: Member,
   ): Promise<MemberSummaryResponseDto> {
-    return await this.memberService.getMemberSummary(filter, member.id);
+    return await this.memberService.getMemberSummary(member.id);
   }
 
   @ApiOperation({
@@ -76,9 +75,8 @@ export class MemberController {
   @Get('/:memberId')
   async getMemberSummary(
     @Param('memberId', ParseIntPipe) memberId: number,
-    @Query('filter', new DefaultValuePipe(Filter.COMMIT)) filter: Filter,
   ): Promise<MemberSummaryResponseDto> {
-    return await this.memberService.getMemberSummary(filter, memberId);
+    return await this.memberService.getMemberSummary(memberId);
   }
 
   @ApiOperation({

@@ -246,7 +246,7 @@ export class LogDataRepository extends Repository<LogData> {
                             left join data_log_type as dlt
                             on dlt.id = ld.log_type_id
                             WHERE DATE(ld.log_date) BETWEEN DATE_FORMAT(NOW() ,'%Y-%m-01') AND DATE(NOW())
-                            AND dlt.log_type = 'COMMITDATE'
+                            AND dlt.log_type = '${filter}'
                             group by ld.member_id, ld.member_id
                             order by ranking asc, ld.member_id asc) as today_rank
                         left join member as m
