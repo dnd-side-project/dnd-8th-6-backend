@@ -8,6 +8,7 @@ import { GradeDto } from '../../application/dto/grade.dto';
 import { GithubContribution } from '../../application/dto/github-contribution-response.dto';
 import { ProfileResponseDto } from './profile-response.dto';
 import { StarSummaryResponseDto } from './star-summary-response.dto';
+import { RankDto } from '../../../rank/application/dto/rank.dto';
 
 export class MemberMainPageResponseDto {
   @ApiProperty()
@@ -44,13 +45,10 @@ export class MemberMainPageResponseDto {
   readonly blogStat?: BlogResponseDto;
 
   @ApiProperty()
-  readonly star?: StarSummaryResponseDto;
+  readonly commitRank?: RankDto;
 
   @ApiProperty()
-  readonly profile: ProfileResponseDto;
-
-  @ApiProperty()
-  readonly rank: any;
+  readonly blogRank?: RankDto;
 
   constructor(
     member: Member,
@@ -58,7 +56,8 @@ export class MemberMainPageResponseDto {
     githubStat?: MemberGithubResponseDto,
     contributions?: GithubContribution[],
     blogStat?: BlogResponseDto,
-    rank?: any,
+    commitRank?: RankDto,
+    blogRank?: RankDto,
   ) {
     this.id = member.id;
     this.name = member.name;
@@ -71,6 +70,7 @@ export class MemberMainPageResponseDto {
     this.githubStat = githubStat;
     this.contributions = contributions;
     this.blogStat = blogStat;
-    this.rank = rank;
+    this.commitRank = commitRank;
+    this.blogRank = blogRank;
   }
 }

@@ -33,7 +33,7 @@ import { ProfileResponseDto } from './dto/profile-response.dto';
 import { GithubContribution } from '../application/dto/github-contribution-response.dto';
 import { MemberGithubResponseDto } from './dto/member-github-response.dto';
 import { MemberMainPageResponseDto } from './dto/member-main-page-response.dto';
-import { Filter } from 'src/rank/domain/filter.enum';
+import { MemberMyPageResponseDto } from './dto/member-my-page-response.dto';
 
 @Controller('member')
 @ApiTags('Member')
@@ -51,13 +51,6 @@ export class MemberController {
     status: 200,
     description: '사용자 요약 정보',
     type: MemberMainPageResponseDto,
-  })
-  @ApiQuery({
-    name: 'filter',
-    description: 'ranking을 매기는 특정 기준',
-    enum: Filter,
-    example: Filter.COMMITDATE,
-    required: true,
   })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))

@@ -21,6 +21,8 @@ import { StarSummaryResponseDto } from '../presentation/dto/star-summary-respons
 import { StarResponseDto } from '../../star/presentation/dto/star-response.dto';
 import { LogDataService } from 'src/rank/application/log-data.service';
 import { Filter } from 'src/rank/domain/filter.enum';
+import { RankDto } from '../../rank/application/dto/rank.dto';
+import { MemberMyPageResponseDto } from '../presentation/dto/member-my-page-response.dto';
 
 @Injectable()
 export class MemberService {
@@ -48,16 +50,14 @@ export class MemberService {
 
     const grade = await this.getGrade(id);
 
-    const rank = await Promise.all(
-      Object.values(Filter).map(async (filter) => {
-        const ranking = await this.logDataService.getRankWithNeighbors(
-          filter,
-          id,
-        );
-        const rank = {};
-        rank[filter] = ranking;
-        return rank;
-      }),
+    const commitRanking = await this.logDataService.getRankOfMember(
+      member,
+      Filter.COMMIT,
+    );
+
+    const blogRanking = await this.logDataService.getRankOfMember(
+      member,
+      Filter.ARTICLECNT,
     );
 
     const githubStat = await this.getGithubInfoById(id);
@@ -72,7 +72,8 @@ export class MemberService {
       githubStat,
       contributions,
       blogStat,
-      rank,
+      commitRanking[0],
+      blogRanking[0],
     );
   }
 
@@ -239,7 +240,7 @@ export class MemberService {
       })
       .getRawOne<{ articles: number }>();
 
-    return result.articles * 2;
+    return result ? result.articles * 2 : 0;
   }
 
   public async getGithubInfoById(id: number): Promise<MemberGithubResponseDto> {
@@ -400,6 +401,9 @@ export class MemberService {
       .addSelect('DATE_FORMAT(data.log_date, "%Y-%m")', 'date')
       .where('data.member_id = :memberId', { memberId: id })
       .andWhere('data.log_type_id = :logTypeId', { logTypeId: type.id })
+      .andWhere(
+        'data.log_date < DATE_FORMAT(NOW() + INTERVAL 1 MONTH, "%Y-%m-01")',
+      )
       .andWhere(
         'data.log_date  > DATE_FORMAT(NOW() - INTERVAL 1 YEAR + INTERVAL 1 MONTH, "%Y-%m-01")',
       )

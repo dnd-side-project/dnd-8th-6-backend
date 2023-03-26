@@ -5,7 +5,7 @@ import { LogDataRepository } from '../repository/log-data.repository';
 import { RankDataDto } from './dto/rank-log-data.dto';
 import { RankSearchDto } from './dto/rank-search.dto';
 import { RankDto, RankWithHostDto } from './dto/rank.dto';
-
+import { Filter } from '../domain/filter.enum';
 
 @Injectable()
 export class LogDataService {
@@ -14,20 +14,46 @@ export class LogDataService {
     private readonly logDataRepository: LogDataRepository,
   ) {}
 
-  public async getRank(rankDataDto: RankDataDto, member: Member): Promise<RankWithHostDto>  {
-    const rankData = await this.logDataRepository.getRankByLogData(rankDataDto, member);
+  public async getRank(
+    rankDataDto: RankDataDto,
+    member: Member,
+  ): Promise<RankWithHostDto> {
+    const rankData = await this.logDataRepository.getRankByLogData(
+      rankDataDto,
+      member,
+    );
 
     return this.getHostRank(rankData, member.id);
   }
 
-  public async getRankByKeaword(rankSearchDto: RankSearchDto, member: Member): Promise<RankDto[]>  {
-    const rankData = await this.logDataRepository.getRankByKeaword(rankSearchDto, member);
+  public async getRankByKeaword(
+    rankSearchDto: RankSearchDto,
+    member: Member,
+  ): Promise<RankDto[]> {
+    const rankData = await this.logDataRepository.getRankByKeaword(
+      rankSearchDto,
+      member,
+    );
 
     return rankData;
   }
 
-  public async getRankWithNeighbors(filter: string, memberId: number): Promise<RankDto[]>  {
-    const rankData = await this.logDataRepository.getRankWithNeighbors(filter, memberId);
+  // TODO 최적화필요!
+  public async getRankOfMember(
+    member: Member,
+    filter: Filter,
+  ): Promise<RankDto[]> {
+    return await this.logDataRepository.getRankOfMember(member, filter);
+  }
+
+  public async getRankWithNeighbors(
+    filter: string,
+    memberId: number,
+  ): Promise<RankDto[]> {
+    const rankData = await this.logDataRepository.getRankWithNeighbors(
+      filter,
+      memberId,
+    );
 
     return rankData;
   }
@@ -38,14 +64,14 @@ export class LogDataService {
     if (index === -1)
       return {
         hostRank: null,
-        rankData
+        rankData,
       };
 
     const item = rankData.splice(index, 1)[0];
-    
+
     return {
       hostRank: item,
-      rankData
+      rankData,
     };
   }
 }
