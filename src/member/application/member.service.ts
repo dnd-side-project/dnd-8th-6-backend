@@ -77,6 +77,30 @@ export class MemberService {
     );
   }
 
+  public async getMemberMyPage(id: number): Promise<MemberMyPageResponseDto> {
+    const member = await this.memberRepository.findOneOrThrow(id);
+
+    const grade = await this.getGrade(member.id);
+
+    const profile = await this.profileService.getProfile(member.id);
+
+    const stars = await this.starService.getStarList(member.id);
+    const starSummary = await this.getStarSummary(stars);
+
+    const githubStat = await this.getGithubInfoById(id);
+
+    const blogStat = await this.blogService.getBlogInfo(id);
+
+    return new MemberMyPageResponseDto(
+      member,
+      grade,
+      profile,
+      starSummary,
+      githubStat,
+      blogStat,
+    );
+  }
+
   private async getGrade(id: number): Promise<GradeDto> {
     const today = new Date();
     const year = today.getFullYear();

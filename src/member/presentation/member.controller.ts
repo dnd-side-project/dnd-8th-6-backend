@@ -62,6 +62,23 @@ export class MemberController {
   }
 
   @ApiOperation({
+    summary: '요청자 마이페이지 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 마이페이지 정보',
+    type: MemberMyPageResponseDto,
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/mypage')
+  async getMemberMyPage(
+    @GetMember() member: Member,
+  ): Promise<MemberMyPageResponseDto> {
+    return await this.memberService.getMemberMyPage(member.id);
+  }
+
+  @ApiOperation({
     summary: '사용자 요약 정보 조회',
   })
   @ApiResponse({
