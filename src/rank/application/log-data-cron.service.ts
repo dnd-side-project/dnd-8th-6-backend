@@ -52,27 +52,39 @@ export class LogDataCronService {
   }
 
 
+  @Cron('0 0 */2 * * *')
+  public async collectGithubCommitWithRetry() {
+    this.logger.log(`github commit crawl start on: ${new Date().getTime()}`);
+    await this.executeWithRetry(this.crawlGithubAndSaveOnRepository.bind(this));
+    this.logger.log(`github commit crawl complete on: ${new Date().getTime()}`);
+  }
+
   @Cron('0 10 */2 * * *')
   public async collectVelogLogWithRetry() {
     this.logger.log(`velog crawl start on: ${new Date().getTime()}`);
-    await this.executeWithRetry(this.collectVelogLog);
+    await this.executeWithRetry(this.collectVelogLog.bind(this));
     this.logger.log(`velog crawl complete on: ${new Date().getTime()}`);
-
   }
 
   @Cron('0 20 */2 * * *')
   public async collectNaverLogWithRetry() {
     this.logger.log(`naver crawl start on: ${new Date().getTime()}`);
-    await this.executeWithRetry(this.collectNaverLog);
+    await this.executeWithRetry(this.collectNaverLog.bind(this));
     this.logger.log(`naver crawl complete on: ${new Date().getTime()}`);
+  }
 
+  @Cron('0 30 */2 * * *')
+  public async collectConsecutiveCommitLogWithRetry() {
+    this.logger.log(`github cc crawl start on: ${new Date().getTime()}`);
+    await this.executeWithRetry(this.countConsecutiveCommits.bind(this));
+    this.logger.log(`github cc crawl complete on: ${new Date().getTime()}`);
   }
 
   public async collectVelogLog() {
     const flatform = 'VELOG';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
     const logType = await this.dataLogTypeRepository.findOneLogType(
-      'ARTICLECNT',
+      LogType.ARTICLECNT,
     );
     const upDateData = await Promise.all(
       member.map(async (m) => {
@@ -100,11 +112,10 @@ export class LogDataCronService {
   }
 
   public async collectNaverLog() {
-    console.log('batch');
     const flatform = 'NAVER';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
     const logType = await this.dataLogTypeRepository.findOneLogType(
-      'ARTICLECNT',
+      LogType.ARTICLECNT,
     );
     const upDateData = await Promise.all(
       member.map(async (m) => {
@@ -131,7 +142,6 @@ export class LogDataCronService {
     return upDateData;
   }
 
-  @Cron('0 0 */2 * * *')
   public async crawlGithubAndSaveOnRepository() {
     // 데이터로그타입을 조회 ex 커밋수, 블로그 데이터인지
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
@@ -192,7 +202,6 @@ export class LogDataCronService {
     return await this.crawler.parseContributionTag();
   }
 
-  @Cron('0 30 */2 * * *')
   public async countConsecutiveCommits() {
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
       where: {
