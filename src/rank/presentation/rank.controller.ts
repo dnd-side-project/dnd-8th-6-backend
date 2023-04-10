@@ -14,7 +14,9 @@ import { Filter } from '../domain/filter.enum';
 @Controller('rank')
 @ApiTags('rank')
 export class RankController {
-  constructor(private readonly logDataService: LogDataService) {}
+  constructor(
+    private readonly logDataService: LogDataService,
+    ) {}
 
   @ApiOperation({ summary: '특정 기준에 따른 user 랭킹 반환 API' })
   @ApiQuery({ name: 'filter', description: 'ranking을 매기는 특정 기준', enum: Filter, example: Filter.COMMITDATE, required: true })

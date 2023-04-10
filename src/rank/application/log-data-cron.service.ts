@@ -29,12 +29,62 @@ export class LogDataCronService {
     private readonly naverCollector: NaverCollector,
   ) {}
 
+  private async executeWithRetry(
+    func: () => Promise<any>,
+    maxRetries = 5,
+    retryInterval = 1000,
+  ) {
+    let retries = 0;
+    while (retries < maxRetries) {
+      try {
+        return await func();
+      } catch (err) {
+        this.logger.error(
+          `Error occurred while executing function: ${err}`,
+          err.stack,
+        );
+        retries++;
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
+      }
+    }
+    this.logger.error(`Function execution failed after ${maxRetries} retries`);
+    throw new Error('Function execution failed');
+  }
+
+
+  @Cron('0 0 */2 * * *')
+  public async collectGithubCommitWithRetry() {
+    this.logger.log(`github commit crawl start on: ${new Date().getTime()}`);
+    await this.executeWithRetry(this.crawlGithubAndSaveOnRepository.bind(this));
+    this.logger.log(`github commit crawl complete on: ${new Date().getTime()}`);
+  }
+
   @Cron('0 10 */2 * * *')
+  public async collectVelogLogWithRetry() {
+    this.logger.log(`velog crawl start on: ${new Date().getTime()}`);
+    await this.executeWithRetry(this.collectVelogLog.bind(this));
+    this.logger.log(`velog crawl complete on: ${new Date().getTime()}`);
+  }
+
+  @Cron('0 20 */2 * * *')
+  public async collectNaverLogWithRetry() {
+    this.logger.log(`naver crawl start on: ${new Date().getTime()}`);
+    await this.executeWithRetry(this.collectNaverLog.bind(this));
+    this.logger.log(`naver crawl complete on: ${new Date().getTime()}`);
+  }
+
+  @Cron('0 30 */2 * * *')
+  public async collectConsecutiveCommitLogWithRetry() {
+    this.logger.log(`github cc crawl start on: ${new Date().getTime()}`);
+    await this.executeWithRetry(this.countConsecutiveCommits.bind(this));
+    this.logger.log(`github cc crawl complete on: ${new Date().getTime()}`);
+  }
+
   public async collectVelogLog() {
     const flatform = 'VELOG';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
     const logType = await this.dataLogTypeRepository.findOneLogType(
-      'ARTICLECNT',
+      LogType.ARTICLECNT,
     );
     const upDateData = await Promise.all(
       member.map(async (m) => {
@@ -61,13 +111,11 @@ export class LogDataCronService {
     return upDateData;
   }
 
-  @Cron('0 20 */2 * * *')
   public async collectNaverLog() {
-    console.log('batch');
     const flatform = 'NAVER';
     const member = await this.memberRepository.getMembersWithBlogs(flatform);
     const logType = await this.dataLogTypeRepository.findOneLogType(
-      'ARTICLECNT',
+      LogType.ARTICLECNT,
     );
     const upDateData = await Promise.all(
       member.map(async (m) => {
@@ -94,8 +142,8 @@ export class LogDataCronService {
     return upDateData;
   }
 
-  @Cron('0 0 */2 * * *')
   public async crawlGithubAndSaveOnRepository() {
+    // 데이터로그타입을 조회 ex 커밋수, 블로그 데이터인지
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
       where: {
         logType: LogType.COMMIT,
@@ -111,43 +159,30 @@ export class LogDataCronService {
       await this.crawler.setConfig();
       const years = await this.getYearsRangeOfGithub(member);
 
-      const contributions = new Set<GithubContribution>();
+      const contributionData = [];
 
       for (const year of years) {
         const githubContributions = await this.getContributionsOfYears(
           member,
           year,
         );
-        githubContributions.forEach((c) => contributions.add(c));
+        githubContributions.forEach((c) => {
+          contributionData.push({
+            logDate: new Date(c.date).toISOString().substring(0, 10),
+            memberId: member.id,
+            logTypeId: dataLogType.id,
+            dataLog: c.contribution ? parseInt(c.contribution): 0,
+          });
+        });
       }
 
       await this.crawler.closeBrowser();
 
-      const legacyLogs = await this.logDataRepository
-        .createQueryBuilder('data')
-        .where('data.member_id = :id', { id: member.id })
-        .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
-        .getMany();
-
-      for (const log of legacyLogs) {
-        await this.logDataRepository.delete(log);
-      }
-
-      for (const contribution of contributions) {
-        let dataLog = 0;
-
-        if (contribution.contribution) {
-          dataLog = Number.parseInt(contribution.contribution);
-        }
-
-        const logData = await this.logDataRepository.create({
-          dataLog: dataLog,
-          logDate: contribution.date,
-          memberId: member.id,
-          logType: dataLogType,
-        });
-        await this.logDataRepository.save(logData);
-      }
+      await Promise.all(
+      contributionData.map(async (logData) => {
+        return await this.logDataRepository.upsertLogData(logData);
+      }));
+  
     }
     this.logger.log(`github crawl complete on: ${new Date().getTime()}`);
   }
@@ -167,7 +202,6 @@ export class LogDataCronService {
     return await this.crawler.parseContributionTag();
   }
 
-  @Cron('0 30 */2 * * *')
   public async countConsecutiveCommits() {
     const dataLogType = await this.dataLogTypeRepository.findOneOrFail({
       where: {
@@ -179,16 +213,6 @@ export class LogDataCronService {
     for (const member of members) {
       if (!member.githubId) {
         continue;
-      }
-
-      const legacyLog = await this.logDataRepository
-        .createQueryBuilder('data')
-        .where('data.member_id = :id', { id: member.id })
-        .andWhere('data.log_type_id = :typeId', { typeId: dataLogType.id })
-        .getOne();
-
-      if (legacyLog) {
-        await this.logDataRepository.delete(legacyLog);
       }
 
       // blog 데이터 포함하도록 함
@@ -204,14 +228,12 @@ export class LogDataCronService {
         consecutiveDays = this.getConsecutiveDays(logs);
       }
 
-      const logData = await this.logDataRepository.create({
+      await this.logDataRepository.upsertLogData({
         dataLog: consecutiveDays,
         logDate: logs[0].logDate,
         memberId: member.id,
-        logType: dataLogType,
+        logTypeId: dataLogType.id,
       });
-
-      await this.logDataRepository.save(logData);
     }
     this.logger.log(`count consecutive complete on: ${new Date().getTime()}`);
   }
