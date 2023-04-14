@@ -10,12 +10,14 @@ import { RankDto, RankWithHostDto } from '../application/dto/rank.dto';
 import { RankSearchDto } from '../application/dto/rank-search.dto';
 import { LogDataService } from '../application/log-data.service';
 import { Filter } from '../domain/filter.enum';
+import { LogDataCronService } from '../application/log-data-cron.service';
 
 @Controller('rank')
 @ApiTags('rank')
 export class RankController {
   constructor(
     private readonly logDataService: LogDataService,
+    private readonly logDataCronService: LogDataCronService,
     ) {}
 
   @ApiOperation({ summary: '특정 기준에 따른 user 랭킹 반환 API' })
@@ -47,5 +49,11 @@ export class RankController {
     @Query() rankSearchDto: RankSearchDto,
   ): Promise<RankDto[]>  {
     return await this.logDataService.getRankByKeaword(rankSearchDto, member);
+  }
+
+  @Get('gen')
+  public async genDummyData(): 
+  Promise<void>  {
+    return await this.logDataCronService.collectDummyWithRetry();
   }
 }
