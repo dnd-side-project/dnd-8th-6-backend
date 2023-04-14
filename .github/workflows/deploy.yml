@@ -12,6 +12,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Application
+        run: npm run build
+      
       - name: Copy Files to Destination
         uses: appleboy/scp-action@master
         with:
@@ -46,7 +52,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ubuntu
           key: ${{ secrets.KEY }}
-          timeout: 180s
+          timeout: 3600s
           script: |
             sh /home/ubuntu/srv/ubuntu/deploy.sh
 
