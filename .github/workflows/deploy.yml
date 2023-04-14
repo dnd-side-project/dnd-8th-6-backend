@@ -12,12 +12,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Build Application
-        run: npm run build
-      
       - name: Copy Files to Destination
         uses: appleboy/scp-action@master
         with:
