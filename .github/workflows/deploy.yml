@@ -17,12 +17,7 @@ jobs:
 
       - name: Build Application
         run: npm run build
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build # build job 이 성공적으로 끝나야만 실행됩니다.
-
-    steps:
+      
       - name: Copy Files to Destination
         uses: appleboy/scp-action@master
         with:
@@ -33,6 +28,12 @@ jobs:
           target: /home/ubuntu/srv/ubuntu
           rm: true
     
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build # build job 이 성공적으로 끝나야만 실행됩니다.
+
+    steps:
       - name: delete useless images and containers
         uses: appleboy/ssh-action@master
         with:
