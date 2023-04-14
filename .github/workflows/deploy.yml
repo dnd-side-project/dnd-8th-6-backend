@@ -1,7 +1,7 @@
 name: Deploy to EC2
 on:
-  push:
-    branches: master
+  pull_request:
+    branches: development
 
 jobs:
   build:
@@ -13,6 +13,12 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@main
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Build Application
+      run: npm run build
     
     - name: create remote directory
       uses: actions/checkout@main
@@ -45,12 +51,12 @@ jobs:
           sudo yes y | sudo docker container prune
           sudo yes y | sudo docker system prune -af
 
-    - name: executing remote ssh commands using password
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ubuntu
-        key: ${{ secrets.KEY }}
-        timeout: 180s
-        script: |
-          sh /home/ubuntu/srv/ubuntu/deploy.sh
+    # - name: executing remote ssh commands using password
+    #   uses: appleboy/ssh-action@master
+    #   with:
+    #     host: ${{ secrets.HOST }}
+    #     username: ubuntu
+    #     key: ${{ secrets.KEY }}
+    #     timeout: 180s
+    #     script: |
+    #       sh /home/ubuntu/srv/ubuntu/deploy.sh
