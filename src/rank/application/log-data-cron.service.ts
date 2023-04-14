@@ -12,6 +12,7 @@ import { Member } from '../../member/domain/member.entity';
 import { VelogCollector } from './velog.collector';
 import { NaverCollector } from './naver.collector';
 import { LogDataDto } from './dto/log-data.dto';
+import { DummyDataGenerator } from './dummy-data-generator';
 
 @Injectable()
 export class LogDataCronService {
@@ -79,6 +80,15 @@ export class LogDataCronService {
     await this.executeWithRetry(this.countConsecutiveCommits.bind(this));
     this.logger.log(`github cc crawl complete on: ${new Date().getTime()}`);
   }
+
+  @Cron('0 0 2 * * *') 
+  public async collectDummyWithRetry(){
+    this.logger.log(`gen dummy start on: ${new Date().getTime()}`);
+    await this.executeWithRetry(this.genDummyData.bind(this));
+    this.logger.log(`gen dummy complete on: ${new Date().getTime()}`);
+  }
+
+
 
   public async collectVelogLog() {
     const flatform = 'VELOG';
@@ -279,5 +289,35 @@ export class LogDataCronService {
     const month = today.getUTCMonth() + 1;
     const day = today.getUTCDate();
     return new Date(`${year}-${month}-${day}`);
+  }
+
+  async genDummyData() {
+    const member = await this.memberRepository.find();
+    const upsert = member.map(async (m) => {
+      const dummyDataGenerator = new DummyDataGenerator();
+      dummyDataGenerator.dataInit();
+
+      for(const data of dummyDataGenerator.dummy){
+        await this.logDataRepository.upsertLogData({
+          logDate: data.logDate,
+          memberId: m.id,
+          logTypeId: 1,
+          dataLog: data.commit,
+        });
+        await this.logDataRepository.upsertLogData({
+          logDate: data.logDate,
+          memberId: m.id,
+          logTypeId: 2,
+          dataLog: data.cc,
+        });
+        await this.logDataRepository.upsertLogData({
+          logDate: data.logDate,
+          memberId: m.id,
+          logTypeId: 3,
+          dataLog: data.blog,
+        });
+      }
+    });
+    await Promise.all(upsert);
   }
 }
