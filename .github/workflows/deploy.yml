@@ -20,15 +20,6 @@ jobs:
     - name: Build Application
       run: npm run build
     
-    - name: Deploy to Server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        source: dist/
-        target: /var/www/myapp
-
     - name: create remote directory
       uses: actions/checkout@main
       with:
@@ -39,14 +30,14 @@ jobs:
           whoami
           mkdir -p /home/ubuntu/srv/ubuntu
 
-    - name: copy source via ssh key
-      uses: burnett01/rsync-deployments@4.1
+    - name: Deploy to Server
+      uses: appleboy/scp-action@master
       with:
-        switches: -avzr --delete
-        remote_path: /home/ubuntu/srv/ubuntu/
-        remote_host: ${{ secrets.HOST }}
-        remote_user: ubuntu
-        remote_key: ${{ secrets.KEY }}
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        password: ${{ secrets.PASSWORD }}
+        source: ./
+        target: /home/ubuntu/srv/ubuntu
 
     - name: delete useless images and containers
       uses: appleboy/ssh-action@master
