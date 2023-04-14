@@ -7,9 +7,6 @@ RUN mkdir -p /usr/src/app
 # 작업디렉토리 지정
 WORKDIR /usr/src/app
 
-# Copy package.json file to working directory
-COPY package*.json ./
-
 # Copy project
 COPY . ./
 
