@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@main
 
     - name: Install Dependencies
-      run: npm install
+      run: npm install --legacy-peer-deps
 
     - name: Build Application
       run: npm run build
