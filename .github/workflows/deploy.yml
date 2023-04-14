@@ -18,6 +18,42 @@ jobs:
       - name: Build Application
         run: npm run build
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build # build job 이 성공적으로 끝나야만 실행됩니다.
+
+    steps:
+build 단계에서 Copy Files to Destination 액션이 가장 먼저 실행되는 이유는 with 키워드가 아닌 run 키워드로 실행하기 때문입니다. run 키워드로 실행하면 해당 액션이 실행될 때까지 이전 액션이 모두 실행된 후에 실행됩니다. 따라서 build 단계의 모든 액션이 실행된 후에 Copy Files to Destination 액션이 실행되는 것이 아니라, Install Dependencies 액션이 실행되고, 그 다음에 Build Application 액션이 실행되고, 그 다음에 Copy Files to Destination 액션이 실행됩니다.
+
+따라서 Copy Files to Destination 액션을 가장 마지막에 실행되도록 다음과 같이 수정해보세요.
+
+yaml
+Copy code
+name: Build and Deploy
+
+on:
+    pull_request:
+        branches: development
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Application
+        run: npm run build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build # build job 이 성공적으로 끝나야만 실행됩니다.
+
+    steps:
       - name: Copy Files to Destination
         uses: appleboy/scp-action@master
         with:
@@ -27,11 +63,6 @@ jobs:
           source: ./
           target: /home/ubuntu/srv/ubuntu
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build # build job 이 성공적으로 끝나야만 실행됩니다.
-
-    steps:
       - name: delete useless images and containers
         uses: appleboy/ssh-action@master
         with:
