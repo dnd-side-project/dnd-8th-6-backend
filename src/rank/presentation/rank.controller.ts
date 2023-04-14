@@ -51,6 +51,7 @@ export class RankController {
     return await this.logDataService.getRankByKeaword(rankSearchDto, member);
   }
 
+  @ApiOperation({ summary: '더미데이터 생성 API' })
   @Get('gen')
   public async genDummyData(): 
   Promise<void>  {
