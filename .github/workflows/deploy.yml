@@ -1,5 +1,8 @@
 name: Build and Deploy
 
+on:
+    pull_request:
+        branches: development
 
 jobs:
   build:
@@ -51,6 +54,7 @@ jobs:
           timeout: 180s
           script: |
             sh /home/ubuntu/srv/ubuntu/deploy.sh
+
 # name: Deploy to EC2
 # on:
 #   pull_request:
