@@ -19,7 +19,6 @@ jobs:
         run: npm run build
 
       - name: Copy Files to Destination
-        run: echo "Copying files to remote server"
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
