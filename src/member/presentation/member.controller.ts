@@ -32,8 +32,8 @@ import { BlogResponseDto } from './dto/blog-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
 import { GithubContribution } from '../application/dto/github-contribution-response.dto';
 import { MemberGithubResponseDto } from './dto/member-github-response.dto';
-import { MemberSummaryResponseDto } from './dto/member-summary-response.dto';
-import { Filter } from 'src/rank/domain/filter.enum';
+import { MemberMainPageResponseDto } from './dto/member-main-page-response.dto';
+import { MemberMyPageResponseDto } from './dto/member-my-page-response.dto';
 
 @Controller('member')
 @ApiTags('Member')
@@ -50,16 +50,32 @@ export class MemberController {
   @ApiResponse({
     status: 200,
     description: '사용자 요약 정보',
-    type: MemberSummaryResponseDto,
+    type: MemberMainPageResponseDto,
   })
-  @ApiQuery({ name: 'filter', description: 'ranking을 매기는 특정 기준', enum: Filter, example: Filter.COMMITDATE, required: true })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/me')
   async getMemberByAccessToken(
     @GetMember() member: Member,
-  ): Promise<MemberSummaryResponseDto> {
+  ): Promise<MemberMainPageResponseDto> {
     return await this.memberService.getMemberSummary(member.id);
+  }
+
+  @ApiOperation({
+    summary: '요청자 마이페이지 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 마이페이지 정보',
+    type: MemberMyPageResponseDto,
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/mypage')
+  async getMemberMyPage(
+    @GetMember() member: Member,
+  ): Promise<MemberMyPageResponseDto> {
+    return await this.memberService.getMemberMyPage(member.id);
   }
 
   @ApiOperation({
@@ -68,14 +84,14 @@ export class MemberController {
   @ApiResponse({
     status: 200,
     description: '사용자 요약 정보',
-    type: MemberSummaryResponseDto,
+    type: MemberMainPageResponseDto,
   })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @Get('/:memberId')
   async getMemberSummary(
     @Param('memberId', ParseIntPipe) memberId: number,
-  ): Promise<MemberSummaryResponseDto> {
+  ): Promise<MemberMainPageResponseDto> {
     return await this.memberService.getMemberSummary(memberId);
   }
 
@@ -145,7 +161,7 @@ export class MemberController {
     @Query('name', new DefaultValuePipe('')) name: string,
     @Query('size', new DefaultValuePipe(10), ParseIntPipe) size: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  ): Promise<MemberSummaryResponseDto[]> {
+  ): Promise<MemberMainPageResponseDto[]> {
     return await this.memberService.getMemberList(name, size, page);
   }
 
@@ -155,7 +171,7 @@ export class MemberController {
   @ApiResponse({
     status: 200,
     description: '사용자 정보',
-    type: MemberSummaryResponseDto,
+    type: MemberMainPageResponseDto,
   })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
@@ -164,7 +180,7 @@ export class MemberController {
     @GetMember() member: Member,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMemberRequestDto: UpdateMemberRequestDto,
-  ): Promise<MemberSummaryResponseDto> {
+  ): Promise<MemberMainPageResponseDto> {
     if (member.id !== id) {
       throw new ForbiddenException();
     }

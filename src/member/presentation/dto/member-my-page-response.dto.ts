@@ -5,11 +5,10 @@ import { MemberGithubResponseDto } from './member-github-response.dto';
 import { BlogResponseDto } from './blog-response.dto';
 import { Member } from '../../domain/member.entity';
 import { GradeDto } from '../../application/dto/grade.dto';
-import { GithubContribution } from '../../application/dto/github-contribution-response.dto';
 import { ProfileResponseDto } from './profile-response.dto';
 import { StarSummaryResponseDto } from './star-summary-response.dto';
 
-export class MemberSummaryResponseDto {
+export class MemberMyPageResponseDto {
   @ApiProperty()
   readonly id: number;
 
@@ -35,34 +34,24 @@ export class MemberSummaryResponseDto {
   readonly exp: number;
 
   @ApiProperty()
-  readonly githubStat?: MemberGithubResponseDto;
+  readonly profile: ProfileResponseDto;
 
-  @ApiProperty({ type: [GithubContribution] })
-  readonly contributions?: GithubContribution[];
+  @ApiProperty()
+  readonly star: StarSummaryResponseDto;
+
+  @ApiProperty()
+  readonly githubStat?: MemberGithubResponseDto;
 
   @ApiProperty()
   readonly blogStat?: BlogResponseDto;
 
-  @ApiProperty()
-  readonly star?: StarSummaryResponseDto;
-
-  @ApiProperty()
-  readonly profile: ProfileResponseDto;
-
-  @ApiProperty()
-  readonly rank: any;
-
-  
-
   constructor(
     member: Member,
     grade: GradeDto,
+    profile: ProfileResponseDto,
+    star: StarSummaryResponseDto,
     githubStat?: MemberGithubResponseDto,
-    contributions?: GithubContribution[],
     blogStat?: BlogResponseDto,
-    star?: StarSummaryResponseDto,
-    profile?: ProfileResponseDto,
-    rank?: any
   ) {
     this.id = member.id;
     this.name = member.name;
@@ -72,11 +61,9 @@ export class MemberSummaryResponseDto {
     this.grade = grade.grade;
     this.score = grade.score;
     this.exp = grade.exp;
-    this.githubStat = githubStat;
-    this.contributions = contributions;
-    this.blogStat = blogStat;
-    this.star = star;
     this.profile = profile;
-    this.rank = rank;
+    this.star = star;
+    this.githubStat = githubStat;
+    this.blogStat = blogStat;
   }
 }

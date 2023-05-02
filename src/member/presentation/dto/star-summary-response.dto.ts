@@ -1,20 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { MemberSummaryResponseDto } from './member-summary-response.dto';
+import { MemberMainPageResponseDto } from './member-main-page-response.dto';
 
 export class StarSummaryResponseDto {
   @ApiProperty()
   readonly followCount: number;
   @ApiProperty()
-  readonly follow: MemberSummaryResponseDto[];
+  readonly follow: MemberMainPageResponseDto[];
   @ApiProperty()
   readonly followerCount: number;
 
   @ApiProperty()
-  readonly follower: MemberSummaryResponseDto[];
+  readonly follower: MemberMainPageResponseDto[];
 
   constructor(
-    follow: MemberSummaryResponseDto[],
-    follower: MemberSummaryResponseDto[],
+    follow: MemberMainPageResponseDto[],
+    follower: MemberMainPageResponseDto[],
   ) {
     this.follow = follow;
     this.follower = follower;

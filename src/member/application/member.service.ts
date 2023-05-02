@@ -13,7 +13,7 @@ import { LogType } from '../../rank/domain/log-type.enum';
 import { MemberGrade } from '../domain/member-grade.enum';
 import { LogData } from '../../rank/domain/log-data.entity';
 import { GradeDto } from './dto/grade.dto';
-import { MemberSummaryResponseDto } from '../presentation/dto/member-summary-response.dto';
+import { MemberMainPageResponseDto } from '../presentation/dto/member-main-page-response.dto';
 import { BlogService } from './blog.service';
 import { ProfileService } from './profile.service';
 import { StarService } from '../../star/application/star.service';
@@ -21,6 +21,8 @@ import { StarSummaryResponseDto } from '../presentation/dto/star-summary-respons
 import { StarResponseDto } from '../../star/presentation/dto/star-response.dto';
 import { LogDataService } from 'src/rank/application/log-data.service';
 import { Filter } from 'src/rank/domain/filter.enum';
+import { RankDto } from '../../rank/application/dto/rank.dto';
+import { MemberMyPageResponseDto } from '../presentation/dto/member-my-page-response.dto';
 
 @Injectable()
 export class MemberService {
@@ -41,58 +43,61 @@ export class MemberService {
     private readonly crawler: Crawler,
   ) {}
 
-  private async getStarSummary(star: StarResponseDto) {
-    const followSummary = [];
-    for (const followId of star.follow) {
-      const member = await this.memberRepository.findOneOrThrow(followId);
-      const grade = await this.getGrade(followId);
-
-      followSummary.push(new MemberSummaryResponseDto(member, grade));
-    }
-
-    const followerSummary = [];
-    for (const followerId of star.follower) {
-      const member = await this.memberRepository.findOneOrThrow(followerId);
-      const grade = await this.getGrade(followerId);
-
-      followerSummary.push(new MemberSummaryResponseDto(member, grade));
-    }
-
-    return new StarSummaryResponseDto(followSummary, followerSummary);
-  }
-
-  public async getMemberSummary(id: number): Promise<MemberSummaryResponseDto> {
+  public async getMemberSummary(
+    id: number,
+  ): Promise<MemberMainPageResponseDto> {
     const member = await this.memberRepository.findOneOrThrow(id);
 
     const grade = await this.getGrade(id);
 
-    const rank = await Promise.all(Object.values(Filter).map(async (filter) => {
-      const ranking = await this.logDataService.getRankWithNeighbors(filter, id);
-      const rank = {};
-      rank[filter] = ranking;
-      return rank;
-    }));
-    
+    const commitRanking = await this.logDataService.getRankOfMember(
+      member,
+      Filter.COMMIT,
+    );
+
+    const blogRanking = await this.logDataService.getRankOfMember(
+      member,
+      Filter.ARTICLECNT,
+    );
+
     const githubStat = await this.getGithubInfoById(id);
 
     const contributions = await this.getGithubContributionsInRepository(id);
 
     const blogStat = await this.blogService.getBlogInfo(id);
 
-    const star = await this.starService.getStarList(id);
-    const starSummary = await this.getStarSummary(star);
-
-    const profile = await this.profileService.getProfile(id);
-
-    return new MemberSummaryResponseDto(
+    return new MemberMainPageResponseDto(
       member,
       grade,
       githubStat,
       contributions,
       blogStat,
-      starSummary,
+      commitRanking[0],
+      blogRanking[0],
+    );
+  }
+
+  public async getMemberMyPage(id: number): Promise<MemberMyPageResponseDto> {
+    const member = await this.memberRepository.findOneOrThrow(id);
+
+    const grade = await this.getGrade(member.id);
+
+    const profile = await this.profileService.getProfile(member.id);
+
+    const stars = await this.starService.getStarList(member.id);
+    const starSummary = await this.getStarSummary(stars);
+
+    const githubStat = await this.getGithubInfoById(id);
+
+    const blogStat = await this.blogService.getBlogInfo(id);
+
+    return new MemberMyPageResponseDto(
+      member,
+      grade,
       profile,
-      rank
+      starSummary,
+      githubStat,
+      blogStat,
     );
   }
 
@@ -259,7 +264,7 @@ export class MemberService {
       })
       .getRawOne<{ articles: number }>();
 
-    return result.articles * 2;
+    return result ? result.articles * 2 : 0;
   }
 
   public async getGithubInfoById(id: number): Promise<MemberGithubResponseDto> {
@@ -313,11 +318,31 @@ export class MemberService {
     return consecutiveLogData !== null ? consecutiveLogData.dataLog : 0;
   }
 
+  private async getStarSummary(star: StarResponseDto) {
+    const followSummary = [];
+    for (const followId of star.follow) {
+      const member = await this.memberRepository.findOneOrThrow(followId);
+      const grade = await this.getGrade(followId);
+
+      followSummary.push(new MemberMainPageResponseDto(member, grade));
+    }
+
+    const followerSummary = [];
+    for (const followerId of star.follower) {
+      const member = await this.memberRepository.findOneOrThrow(followerId);
+      const grade = await this.getGrade(followerId);
+
+      followerSummary.push(new MemberMainPageResponseDto(member, grade));
+    }
+
+    return new StarSummaryResponseDto(followSummary, followerSummary);
+  }
+
   public async getMemberList(
     name: string,
     size: number,
     page: number,
-  ): Promise<MemberSummaryResponseDto[]> {
+  ): Promise<MemberMainPageResponseDto[]> {
     const members =
       await this.memberRepository.getMemberListByNameOrGithubIdLike(
         name,
@@ -329,7 +354,7 @@ export class MemberService {
 
     for (const member of members) {
       const grade = await this.getGrade(member.id);
-      const summary = new MemberSummaryResponseDto(member, grade);
+      const summary = new MemberMainPageResponseDto(member, grade);
       summaries.push(summary);
     }
 
@@ -349,7 +374,7 @@ export class MemberService {
 
     const grade = await this.getGrade(id);
 
-    return new MemberSummaryResponseDto(member, grade);
+    return new MemberMainPageResponseDto(member, grade);
   }
 
   public async deleteMember(id: number, refreshToken: string): Promise<void> {
@@ -400,6 +425,9 @@ export class MemberService {
       .addSelect('DATE_FORMAT(data.log_date, "%Y-%m")', 'date')
       .where('data.member_id = :memberId', { memberId: id })
       .andWhere('data.log_type_id = :logTypeId', { logTypeId: type.id })
+      .andWhere(
+        'data.log_date < DATE_FORMAT(NOW() + INTERVAL 1 MONTH, "%Y-%m-01")',
+      )
       .andWhere(
         'data.log_date  > DATE_FORMAT(NOW() - INTERVAL 1 YEAR + INTERVAL 1 MONTH, "%Y-%m-01")',
       )

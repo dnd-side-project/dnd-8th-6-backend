@@ -30,7 +30,8 @@ export class BlogService {
     });
 
     if (!member.blog) {
-      throw new BadRequestException('등록된 블로그가 없습니다.');
+      // throw new BadRequestException('등록된 블로그가 없습니다.');
+      return null;
     }
     const blogStat = await this.getBlogStat(member);
     return new BlogResponseDto(member.blog, blogStat);
